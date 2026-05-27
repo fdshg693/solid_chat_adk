@@ -1,5 +1,6 @@
 ---
-trigger: manual
+trigger: model_decision
+description: ADKの公式ドキュメント・実際の実装を確認する必要がある場合は、必ずこのルールを読み込んでください
 ---
 
 # ADK

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { LlmAgent, Runner, InMemorySessionService, InMemoryArtifactService, InMemoryMemoryService } from '@google/adk';
+import { LlmAgent, Runner, InMemorySessionService, InMemoryArtifactService, InMemoryMemoryService, FunctionTool } from '@google/adk';
+import { z } from 'zod';
+import { tavily } from '@tavily/core';
 
 const globalSessionService = new InMemorySessionService();
 const globalArtifactService = new InMemoryArtifactService();
@@ -19,7 +21,7 @@ app.get('/api/health', (_req, res) => {
 
 // Primary chat endpoint
 app.post('/api/chat', async (req, res) => {
-  const { message, apiKey, sessionId, instruction, model } = req.body;
+  const { message, apiKey, tavilyApiKey, sessionId, instruction, model } = req.body;
 
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     return res.status(400).json({ error: 'Gemini API key is required and must be provided.' });
@@ -42,11 +44,39 @@ app.post('/api/chat', async (req, res) => {
 
     console.log(`[Backend] Initializing LlmAgent with model: ${selectedModel}`);
     
+    const tools = [];
+    if (tavilyApiKey && typeof tavilyApiKey === 'string' && tavilyApiKey.trim() !== '') {
+      const tvly = tavily({ apiKey: tavilyApiKey.trim() });
+      const searchTool = new FunctionTool({
+        name: 'tavilySearch',
+        description: 'Search the web for up to date information using Tavily API. Use this tool when you need current events, recent data, or external knowledge not in your training data.',
+        parameters: z.object({
+          query: z.string().describe('The search query string'),
+        }),
+        execute: async (args: { query: string }) => {
+          try {
+            console.log(`[Backend] Executing web search for: "${args.query}"`);
+            const searchResult = await tvly.search(args.query, {
+              searchDepth: 'basic',
+              maxResults: 5,
+            });
+            return searchResult;
+          } catch (e: any) {
+            console.error('[Backend] Tavily search error:', e);
+            return { error: `Search failed: ${e.message}` };
+          }
+        },
+      });
+      tools.push(searchTool);
+      console.log(`[Backend] Registered Tavily search tool.`);
+    }
+
     // Instantiate LlmAgent
     const agent = new LlmAgent({
       name: 'SolidChatAgent',
       model: selectedModel,
       instruction: systemInstruction,
+      tools: tools.length > 0 ? tools : undefined,
     });
 
     // Create Runner

@@ -18,6 +18,9 @@ function App() {
   const [apiKey, setApiKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
   const [tempKey, setTempKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
   
+  const [tavilyApiKey, setTavilyApiKey] = createSignal(localStorage.getItem('tavily_api_key') || '');
+  const [tempTavilyKey, setTempTavilyKey] = createSignal(localStorage.getItem('tavily_api_key') || '');
+  
   const [model, setModel] = createSignal(localStorage.getItem('gemini_model') || 'gemini-2.5-flash');
   
   const [instruction, setInstruction] = createSignal(
@@ -104,7 +107,15 @@ function App() {
     localStorage.setItem('gemini_model', model());
     localStorage.setItem('gemini_system_instruction', instruction());
     
+    const tavilyKey = tempTavilyKey().trim();
+    if (tavilyKey) {
+      localStorage.setItem('tavily_api_key', tavilyKey);
+    } else {
+      localStorage.removeItem('tavily_api_key');
+    }
+    
     setApiKey(key);
+    setTavilyApiKey(tavilyKey);
     setErrorMessage('');
     setShowSettings(false);
   };
@@ -115,6 +126,12 @@ function App() {
     setApiKey('');
     setTempKey('');
     setShowSettings(true);
+  };
+
+  const clearTavilyApiKey = () => {
+    localStorage.removeItem('tavily_api_key');
+    setTavilyApiKey('');
+    setTempTavilyKey('');
   };
 
   // Action: Select another chat session
@@ -208,6 +225,7 @@ function App() {
         body: JSON.stringify({
           message: query,
           apiKey: apiKey(),
+          tavilyApiKey: tavilyApiKey(),
           sessionId: sessionId(),
           instruction: instruction(),
           model: model()
@@ -286,6 +304,9 @@ function App() {
           >
             <span class="api-key-badge saved">API Key Confirmed</span>
           </Show>
+          <Show when={tavilyApiKey()}>
+            <span class="api-key-badge saved" style="margin-left: 8px;">Tavily Active</span>
+          </Show>
 
           <button
             class={`btn-glass ${showSettings() ? 'active' : ''}`}
@@ -324,6 +345,27 @@ function App() {
                 />
                 <Show when={apiKey()}>
                   <button type="button" class="btn-glass" onClick={clearApiKey} style="color: var(--color-error); border-color: rgba(239,68,68,0.2);">
+                    Clear
+                  </button>
+                </Show>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <label class="settings-label">
+                Tavily API Key (Optional)
+                <span class="settings-info">(Enable Tavily web search)</span>
+              </label>
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <input
+                  type="password"
+                  class="input-text"
+                  placeholder="tvly-..."
+                  value={tempTavilyKey()}
+                  onInput={(e) => setTempTavilyKey(e.currentTarget.value)}
+                />
+                <Show when={tavilyApiKey()}>
+                  <button type="button" class="btn-glass" onClick={clearTavilyApiKey} style="color: var(--color-error); border-color: rgba(239,68,68,0.2);">
                     Clear
                   </button>
                 </Show>
