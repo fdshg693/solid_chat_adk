@@ -25,7 +25,10 @@ memosApp.post('/', async (c) => {
     const newMemo = {
       id,
       title: body.title,
-      content: body.content || ''
+      content: body.content || '',
+      creator: body.creator,
+      updater: body.updater,
+      targetAudiences: body.targetAudiences
     };
     
     saveMemo(newMemo);
@@ -49,7 +52,10 @@ memosApp.put('/:id', async (c) => {
     const updatedMemo = {
       id,
       title: body.title !== undefined ? body.title : existing.title,
-      content: body.content !== undefined ? body.content : existing.content
+      content: body.content !== undefined ? body.content : existing.content,
+      creator: body.creator !== undefined ? body.creator : existing.creator,
+      updater: body.updater !== undefined ? body.updater : existing.updater,
+      targetAudiences: body.targetAudiences !== undefined ? body.targetAudiences : existing.targetAudiences
     };
     
     saveMemo(updatedMemo);

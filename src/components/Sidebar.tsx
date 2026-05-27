@@ -17,7 +17,14 @@ import {
 
 export function Sidebar() {
   const addMemo = async () => {
-    const newMemo: UserMemo = { id: `memo-${Date.now()}`, title: `New Memo ${userMemos().length + 1}`, content: '' };
+    const newMemo: UserMemo = { 
+      id: `memo-${Date.now()}`, 
+      title: `New Memo ${userMemos().length + 1}`, 
+      content: '',
+      creator: 'user',
+      updater: 'user',
+      targetAudiences: []
+    };
     const updated = [...userMemos(), newMemo];
     setUserMemos(updated);
     
@@ -34,31 +41,23 @@ export function Sidebar() {
 
   let saveTimeouts: Record<string, number> = {};
 
-  const saveToBackend = (id: string, title: string, content: string) => {
-    if (saveTimeouts[id]) clearTimeout(saveTimeouts[id]);
-    saveTimeouts[id] = window.setTimeout(() => {
-      fetch(`/api/memos/${id}`, {
+  const saveToBackend = (memo: UserMemo) => {
+    if (saveTimeouts[memo.id]) clearTimeout(saveTimeouts[memo.id]);
+    saveTimeouts[memo.id] = window.setTimeout(() => {
+      fetch(`/api/memos/${memo.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
+        body: JSON.stringify(memo)
       }).catch(e => console.error(e));
     }, 500);
   };
 
-  const updateMemoTitle = (id: string, title: string) => {
+  const updateMemoField = (id: string, updates: Partial<UserMemo>) => {
     const memo = userMemos().find(m => m.id === id);
     if (!memo) return;
-    const updated = userMemos().map(m => m.id === id ? { ...m, title } : m);
-    setUserMemos(updated);
-    saveToBackend(id, title, memo.content);
-  };
-
-  const updateMemoContent = (id: string, content: string) => {
-    const memo = userMemos().find(m => m.id === id);
-    if (!memo) return;
-    const updated = userMemos().map(m => m.id === id ? { ...m, content } : m);
-    setUserMemos(updated);
-    saveToBackend(id, memo.title, content);
+    const updated = { ...memo, ...updates, updater: 'user' };
+    setUserMemos(userMemos().map(m => m.id === id ? updated : m));
+    saveToBackend(updated);
   };
 
   const deleteMemo = async (id: string) => {
@@ -127,7 +126,7 @@ export function Sidebar() {
                     style="flex: 1; margin-right: 0.5rem; padding: 0.2rem 0.4rem; font-size: 0.8rem;"
                     value={memo.title}
                     placeholder="メモのタイトル..."
-                    onInput={(e) => updateMemoTitle(memo.id, e.currentTarget.value)}
+                    onInput={(e) => updateMemoField(memo.id, { title: e.currentTarget.value })}
                   />
                   <button
                     class="btn-delete-session"
@@ -137,13 +136,55 @@ export function Sidebar() {
                     🗑️
                   </button>
                 </div>
+                <div style="display: flex; gap: 0.2rem; font-size: 0.7rem;">
+                  <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label style="color: var(--text-muted); margin-bottom: 0.1rem;">作成者</label>
+                    <select
+                      class="input-text"
+                      style="padding: 0.1rem 0.2rem; font-size: 0.7rem; background: var(--bg-dark); color: var(--text-bright);"
+                      value={memo.creator || 'user'}
+                      onChange={(e) => updateMemoField(memo.id, { creator: e.currentTarget.value })}
+                    >
+                      <option value="user">User</option>
+                      <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
+                    </select>
+                  </div>
+                  <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label style="color: var(--text-muted); margin-bottom: 0.1rem;">更新者</label>
+                    <select
+                      class="input-text"
+                      style="padding: 0.1rem 0.2rem; font-size: 0.7rem; background: var(--bg-dark); color: var(--text-bright);"
+                      value={memo.updater || 'user'}
+                      onChange={(e) => updateMemoField(memo.id, { updater: e.currentTarget.value })}
+                    >
+                      <option value="user">User</option>
+                      <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
+                    </select>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; font-size: 0.7rem;">
+                  <label style="color: var(--text-muted); margin-bottom: 0.1rem;">対象者 (複数選択可)</label>
+                  <select
+                    class="input-text"
+                    multiple
+                    style="padding: 0.2rem; font-size: 0.7rem; background: var(--bg-dark); color: var(--text-bright); height: 40px;"
+                    value={memo.targetAudiences || []}
+                    onChange={(e) => {
+                      const selected = Array.from(e.currentTarget.selectedOptions).map(o => o.value);
+                      updateMemoField(memo.id, { targetAudiences: selected });
+                    }}
+                  >
+                    <option value="user">User</option>
+                    <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
+                  </select>
+                </div>
                 <textarea
                   class="input-text"
                   rows={3}
                   style="resize: vertical; width: 100%; box-sizing: border-box; font-size: 0.8rem; padding: 0.4rem;"
                   placeholder="メモの内容..."
                   value={memo.content}
-                  onInput={(e) => updateMemoContent(memo.id, e.currentTarget.value)}
+                  onInput={(e) => updateMemoField(memo.id, { content: e.currentTarget.value })}
                 />
               </div>
             )}

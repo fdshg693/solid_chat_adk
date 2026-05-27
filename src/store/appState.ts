@@ -29,6 +29,9 @@ export interface UserMemo {
   id: string;
   title: string;
   content: string;
+  creator?: string;
+  updater?: string;
+  targetAudiences?: string[];
 }
 
 export const [userMemos, setUserMemos] = createSignal<UserMemo[]>([]);
@@ -43,9 +46,22 @@ export const [agents, setAgents] = createSignal<Agent[]>([]);
 export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem('active_agent_id') || '');
 export const [showAgentManager, setShowAgentManager] = createSignal(false);
 
-// Fetch initial memos from backend
-fetch('/api/memos')
-  .then(res => res.json())
+// Helper to fetch with retry to allow backend time to start up
+const fetchWithRetry = async (url: string, retries = 5, delay = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// Fetch initial memos from backend with retry
+fetchWithRetry('/api/memos')
   .then(data => {
     if (Array.isArray(data)) {
       setUserMemos(data);
@@ -53,9 +69,8 @@ fetch('/api/memos')
   })
   .catch(e => console.error('Failed to fetch initial memos', e));
 
-// Fetch initial agents from backend
-fetch('/api/agents')
-  .then(res => res.json())
+// Fetch initial agents from backend with retry
+fetchWithRetry('/api/agents')
   .then(data => {
     if (Array.isArray(data)) {
       setAgents(data);

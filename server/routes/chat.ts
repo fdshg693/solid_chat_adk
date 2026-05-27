@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { runAgent } from '../agent';
-import { streamText } from 'hono/streaming';
 
 const chatApp = new Hono();
 
@@ -42,10 +41,10 @@ chatApp.post('/', async (c) => {
     });
 
     let responseText = '';
-    
+
     for await (const event of stream) {
       console.log('[Backend] Event received:', JSON.stringify(event).substring(0, 150));
-      
+
       // Extract text from the event
       if (event && typeof event === 'object') {
         if ('content' in event && event.content && typeof event.content === 'object') {
@@ -58,11 +57,11 @@ chatApp.post('/', async (c) => {
             }
           }
         }
-        
+
         if ('text' in event && typeof (event as any).text === 'string') {
           responseText += (event as any).text;
         }
-        
+
         if ('message' in event && typeof (event as any).message === 'string') {
           responseText += (event as any).message;
         }

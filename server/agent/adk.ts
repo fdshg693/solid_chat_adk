@@ -1,5 +1,5 @@
 import { LlmAgent, Runner, InMemorySessionService, InMemoryArtifactService, InMemoryMemoryService } from '@google/adk';
-import { getAvailableTools, GetToolsOptions } from '../tools';
+import { getAvailableTools, type GetToolsOptions } from '../tools';
 
 // Global services for ADK state
 const globalSessionService = new InMemorySessionService();
