@@ -7,6 +7,12 @@ interface Message {
   timestamp: number;
 }
 
+interface ChatSession {
+  id: string;
+  title: string;
+  timestamp: number;
+}
+
 function App() {
   // Config & State Signals
   const [apiKey, setApiKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
@@ -23,7 +29,42 @@ function App() {
   const [messages, setMessages] = createSignal<Message[]>([]);
   const [loading, setLoading] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal('');
-  const [sessionId, setSessionId] = createSignal(`session-${Date.now()}`);
+
+  // Session handling helpers
+  const getInitialSessions = (): ChatSession[] => {
+    const saved = localStorage.getItem('chat_sessions');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Failed to parse chat sessions', e);
+      }
+    }
+    const defaultSessionId = `session-${Date.now()}`;
+    const defaultSessions = [{ id: defaultSessionId, title: '新しい会話', timestamp: Date.now() }];
+    localStorage.setItem('chat_sessions', JSON.stringify(defaultSessions));
+    localStorage.setItem('active_session_id', defaultSessionId);
+    return defaultSessions;
+  };
+
+  const getInitialSessionId = (initialSessions: ChatSession[]): string => {
+    const savedActive = localStorage.getItem('active_session_id');
+    if (savedActive && initialSessions.some(s => s.id === savedActive)) {
+      return savedActive;
+    }
+    const fallbackId = initialSessions[0].id;
+    localStorage.setItem('active_session_id', fallbackId);
+    return fallbackId;
+  };
+
+  const initialSessions = getInitialSessions();
+  const initialSessionId = getInitialSessionId(initialSessions);
+
+  const [sessions, setSessions] = createSignal<ChatSession[]>(initialSessions);
+  const [sessionId, setSessionId] = createSignal<string>(initialSessionId);
   
   let scrollerRef: HTMLDivElement | undefined;
 
@@ -76,13 +117,55 @@ function App() {
     setShowSettings(true);
   };
 
-  // Action: Reset entire chat session
-  const resetSession = () => {
-    if (confirm('Are you sure you want to reset this chat and start a new session?')) {
-      localStorage.removeItem(`chat_history_${sessionId()}`);
-      setSessionId(`session-${Date.now()}`);
+  // Action: Select another chat session
+  const selectSession = (id: string) => {
+    setSessionId(id);
+    localStorage.setItem('active_session_id', id);
+    const savedMessages = localStorage.getItem(`chat_history_${id}`);
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error('Failed to restore chat history', e);
+        setMessages([]);
+      }
+    } else {
       setMessages([]);
-      setErrorMessage('');
+    }
+    setErrorMessage('');
+    scrollToBottom();
+  };
+
+  // Action: Start a brand new session
+  const createNewSession = () => {
+    const newId = `session-${Date.now()}`;
+    const newSession: ChatSession = {
+      id: newId,
+      title: '新しい会話',
+      timestamp: Date.now()
+    };
+    const updatedSessions = [newSession, ...sessions()];
+    setSessions(updatedSessions);
+    localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
+    selectSession(newId);
+  };
+
+  // Action: Delete a session
+  const deleteSession = (id: string) => {
+    if (confirm('この会話履歴を削除してもよろしいですか？')) {
+      localStorage.removeItem(`chat_history_${id}`);
+      
+      const updatedSessions = sessions().filter(s => s.id !== id);
+      setSessions(updatedSessions);
+      localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
+
+      if (sessionId() === id) {
+        if (updatedSessions.length > 0) {
+          selectSession(updatedSessions[0].id);
+        } else {
+          createNewSession();
+        }
+      }
     }
   };
 
@@ -155,11 +238,24 @@ function App() {
       
       // Save history
       localStorage.setItem(`chat_history_${sessionId()}`, JSON.stringify(finalMessages));
+
+      // Update session title if it is currently the default "新しい会話"
+      const currentSession = sessions().find(s => s.id === sessionId());
+      if (currentSession && currentSession.title === '新しい会話') {
+        const titleText = query.length > 25 ? `${query.substring(0, 25)}...` : query;
+        const updatedSessions = sessions().map(s => {
+          if (s.id === sessionId()) {
+            return { ...s, title: titleText };
+          }
+          return s;
+        });
+        setSessions(updatedSessions);
+        localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
+      }
       
     } catch (err: any) {
       console.error('Chat error:', err);
       setErrorMessage(err.message || 'Network error occurred. Ensure your local server is running.');
-      // Remove last user message if it failed to process (optional) or keep it with red color
     } finally {
       setLoading(false);
       scrollToBottom();
@@ -201,10 +297,10 @@ function App() {
           
           <button
             class="btn-glass"
-            onClick={resetSession}
-            title="Reset Chat Session"
+            onClick={createNewSession}
+            title="新しいチャットを開始"
           >
-            🔄 New Session
+            ➕ 新しいチャット
           </button>
         </div>
       </header>
@@ -295,6 +391,34 @@ function App() {
                 <span>Type</span>
                 <span class="sidebar-info-val">LlmAgent</span>
               </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="sidebar-title">💬 会話履歴</h3>
+            <div class="sidebar-sessions-list">
+              <For each={sessions()}>
+                {(sessionItem) => (
+                  <div
+                    class={`session-list-item ${sessionItem.id === sessionId() ? 'active' : ''}`}
+                    onClick={() => selectSession(sessionItem.id)}
+                  >
+                    <span class="session-item-title" title={sessionItem.title}>
+                      {sessionItem.title}
+                    </span>
+                    <button
+                      class="btn-delete-session"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(sessionItem.id);
+                      }}
+                      title="会話を削除"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                )}
+              </For>
             </div>
           </div>
 
