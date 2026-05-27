@@ -12,29 +12,59 @@ import {
 } from '../store/appState';
 
 export function Sidebar() {
-  const addMemo = () => {
+  const addMemo = async () => {
     const newMemo: UserMemo = { id: `memo-${Date.now()}`, title: `New Memo ${userMemos().length + 1}`, content: '' };
     const updated = [...userMemos(), newMemo];
     setUserMemos(updated);
-    localStorage.setItem('user_memos', JSON.stringify(updated));
+    
+    try {
+      await fetch('/api/memos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMemo)
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  let saveTimeouts: Record<string, number> = {};
+
+  const saveToBackend = (id: string, title: string, content: string) => {
+    if (saveTimeouts[id]) clearTimeout(saveTimeouts[id]);
+    saveTimeouts[id] = window.setTimeout(() => {
+      fetch(`/api/memos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content })
+      }).catch(e => console.error(e));
+    }, 500);
   };
 
   const updateMemoTitle = (id: string, title: string) => {
+    const memo = userMemos().find(m => m.id === id);
+    if (!memo) return;
     const updated = userMemos().map(m => m.id === id ? { ...m, title } : m);
     setUserMemos(updated);
-    localStorage.setItem('user_memos', JSON.stringify(updated));
+    saveToBackend(id, title, memo.content);
   };
 
   const updateMemoContent = (id: string, content: string) => {
+    const memo = userMemos().find(m => m.id === id);
+    if (!memo) return;
     const updated = userMemos().map(m => m.id === id ? { ...m, content } : m);
     setUserMemos(updated);
-    localStorage.setItem('user_memos', JSON.stringify(updated));
+    saveToBackend(id, memo.title, content);
   };
 
-  const deleteMemo = (id: string) => {
+  const deleteMemo = async (id: string) => {
     const updated = userMemos().filter(m => m.id !== id);
     setUserMemos(updated);
-    localStorage.setItem('user_memos', JSON.stringify(updated));
+    try {
+      await fetch(`/api/memos/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (

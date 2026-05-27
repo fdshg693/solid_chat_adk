@@ -31,27 +31,17 @@ export interface UserMemo {
   content: string;
 }
 
-const getInitialMemos = (): UserMemo[] => {
-  const saved = localStorage.getItem('user_memos');
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-    } catch (e) {
-      console.error('Failed to parse user memos', e);
-    }
-  }
-  // Migration from old single memo
-  const oldMemo = localStorage.getItem('user_memo');
-  if (oldMemo) {
-    return [{ id: `memo-${Date.now()}`, title: 'Memo 1', content: oldMemo }];
-  }
-  return [];
-};
+export const [userMemos, setUserMemos] = createSignal<UserMemo[]>([]);
 
-export const [userMemos, setUserMemos] = createSignal<UserMemo[]>(getInitialMemos());
+// Fetch initial memos from backend
+fetch('/api/memos')
+  .then(res => res.json())
+  .then(data => {
+    if (Array.isArray(data)) {
+      setUserMemos(data);
+    }
+  })
+  .catch(e => console.error('Failed to fetch initial memos', e));
 
 export const [showSettings, setShowSettings] = createSignal(!localStorage.getItem('gemini_api_key'));
 export const [userInput, setUserInput] = createSignal('');
@@ -241,8 +231,7 @@ export const sendMessage = async (e: Event) => {
         tavilyApiKey: tavilyApiKey(),
         sessionId: sessionId(),
         instruction: instruction(),
-        model: model(),
-        userMemos: userMemos()
+        model: model()
       })
     });
 
