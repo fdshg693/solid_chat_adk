@@ -33,6 +33,16 @@ export interface UserMemo {
 
 export const [userMemos, setUserMemos] = createSignal<UserMemo[]>([]);
 
+export interface Agent {
+  id: string;
+  name: string;
+  systemPrompt: string;
+}
+
+export const [agents, setAgents] = createSignal<Agent[]>([]);
+export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem('active_agent_id') || '');
+export const [showAgentManager, setShowAgentManager] = createSignal(false);
+
 // Fetch initial memos from backend
 fetch('/api/memos')
   .then(res => res.json())
@@ -42,6 +52,16 @@ fetch('/api/memos')
     }
   })
   .catch(e => console.error('Failed to fetch initial memos', e));
+
+// Fetch initial agents from backend
+fetch('/api/agents')
+  .then(res => res.json())
+  .then(data => {
+    if (Array.isArray(data)) {
+      setAgents(data);
+    }
+  })
+  .catch(e => console.error('Failed to fetch initial agents', e));
 
 export const [showSettings, setShowSettings] = createSignal(!localStorage.getItem('gemini_api_key'));
 export const [userInput, setUserInput] = createSignal('');
@@ -220,6 +240,12 @@ export const sendMessage = async (e: Event) => {
 
   // Call API proxy
   try {
+    let effectiveInstruction = instruction();
+    const activeAgent = agents().find(a => a.id === selectedAgentId());
+    if (activeAgent) {
+      effectiveInstruction = activeAgent.systemPrompt;
+    }
+
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -230,7 +256,7 @@ export const sendMessage = async (e: Event) => {
         apiKey: apiKey(),
         tavilyApiKey: tavilyApiKey(),
         sessionId: sessionId(),
-        instruction: instruction(),
+        instruction: effectiveInstruction,
         model: model()
       })
     });

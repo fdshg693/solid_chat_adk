@@ -1,5 +1,6 @@
 import { Header } from './components/Header';
 import { SettingsDrawer } from './components/SettingsDrawer';
+import { AgentManager } from './components/AgentManager';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/Chat/MessageList';
 import { InputSection } from './components/Chat/InputSection';
@@ -16,6 +17,9 @@ function App() {
 
       {/* Settings Drawer Panel */}
       <SettingsDrawer />
+
+      {/* Agent Manager Panel */}
+      <AgentManager />
 
       {/* Main workspace */}
       <div class="chat-workspace">

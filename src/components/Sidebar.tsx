@@ -8,7 +8,11 @@ import {
   sessionId,
   selectSession,
   deleteSession,
-  messages
+  messages,
+  agents,
+  selectedAgentId,
+  setSelectedAgentId,
+  setShowAgentManager
 } from '../store/appState';
 
 export function Sidebar() {
@@ -70,8 +74,28 @@ export function Sidebar() {
   return (
     <aside class="sidebar-panel">
       <div>
-        <h3 class="sidebar-title">🤖 Active Agent</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h3 class="sidebar-title" style="margin: 0;">🤖 Active Agent</h3>
+          <button class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onClick={() => setShowAgentManager(true)}>Manage</button>
+        </div>
         <div class="sidebar-card">
+          <div class="sidebar-info-row" style="margin-bottom: 0.5rem;">
+            <select
+              class="input-text"
+              style="width: 100%; font-size: 0.8rem; padding: 0.3rem; background: var(--bg-dark); color: var(--text-bright); border: 1px solid var(--border-color); border-radius: 4px;"
+              value={selectedAgentId()}
+              onChange={(e) => {
+                const newId = e.currentTarget.value;
+                setSelectedAgentId(newId);
+                localStorage.setItem('active_agent_id', newId);
+              }}
+            >
+              <option value="">Global Default</option>
+              <For each={agents()}>
+                {(agent) => <option value={agent.id}>{agent.name}</option>}
+              </For>
+            </select>
+          </div>
           <div class="sidebar-info-row">
             <span>SDK</span>
             <span class="sidebar-info-val">@google/adk v1.1.0</span>
