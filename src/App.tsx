@@ -441,7 +441,7 @@ function App() {
           </div>
           
           <div style="margin-top: auto; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
-            This chat runs an unmodified <strong>LlmAgent</strong> orchestrated by an <strong>InMemoryRunner</strong> using the <strong>Agent Development Kit</strong>.
+            This chat runs an unmodified <strong>LlmAgent</strong> orchestrated by a <strong>Runner</strong> (with <strong>InMemorySessionService</strong>) using the <strong>Agent Development Kit</strong>.
           </div>
         </aside>
 

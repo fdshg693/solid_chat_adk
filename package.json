@@ -6,7 +6,7 @@
   "scripts": {
     "dev:frontend": "vite",
     "dev:backend": "node --import tsx --watch-path=server.ts server.ts",
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev": "concurrently --kill-others \"vite\" \"node --import tsx --watch-path=server.ts server.ts\"",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "start": "tsx server.ts"

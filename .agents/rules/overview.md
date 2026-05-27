@@ -15,7 +15,7 @@ This project is an AI Chat application built with a dual-process architecture:
    - Persists the user's Gemini API key and active chat histories/session IDs inside the browser's `LocalStorage`.
 2. **Backend**: A lightweight **Node/Express** server (`server.ts`) running the server-side **Google Agent Development Kit (`@google/adk`)**.
    - Vite is configured to proxy all `/api/*` requests to this backend (running on port `3001`).
-   - Uses `LlmAgent` and `InMemoryRunner` for conversational intelligence.
+   - Uses `LlmAgent` and `Runner` (with a global `InMemorySessionService`) to persist conversational state.
    - The user-supplied API key is sent dynamically with request payloads to authenticate API calls server-side.
 
 ## Directory Structure

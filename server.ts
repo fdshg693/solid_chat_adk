@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import { LlmAgent, InMemoryRunner } from '@google/adk';
+import { LlmAgent, Runner, InMemorySessionService, InMemoryArtifactService, InMemoryMemoryService } from '@google/adk';
+
+const globalSessionService = new InMemorySessionService();
+const globalArtifactService = new InMemoryArtifactService();
+const globalMemoryService = new InMemoryMemoryService();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -46,9 +50,12 @@ app.post('/api/chat', async (req, res) => {
     });
 
     // Create Runner
-    const runner = new InMemoryRunner({
+    const runner = new Runner({
+      appName: 'SolidChatApp',
       agent,
-      appName: 'SolidChatApp'
+      sessionService: globalSessionService,
+      artifactService: globalArtifactService,
+      memoryService: globalMemoryService
     });
 
     const activeSessionId = sessionId && typeof sessionId === 'string' && sessionId.trim() !== ''
@@ -56,22 +63,21 @@ app.post('/api/chat', async (req, res) => {
       : 'default-session';
 
     // Create session if it doesn't exist
-    let session;
-    try {
+    let session = await runner.sessionService.getSession({
+      appName: 'SolidChatApp',
+      userId: 'solid-user',
+      sessionId: activeSessionId
+    });
+
+    if (!session) {
       session = await runner.sessionService.createSession({
         appName: 'SolidChatApp',
         userId: 'solid-user',
         sessionId: activeSessionId
       });
       console.log(`[Backend] Created new session: ${session.id}`);
-    } catch (sessionErr) {
-      // Session might already exist, retrieve it
-      session = await runner.sessionService.getSession({
-        appName: 'SolidChatApp',
-        userId: 'solid-user',
-        sessionId: activeSessionId
-      });
-      console.log(`[Backend] Found existing session: ${session?.id}`);
+    } else {
+      console.log(`[Backend] Found existing session: ${session.id}`);
     }
 
     const sessId = session ? session.id : activeSessionId;

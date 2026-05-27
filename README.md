@@ -5,7 +5,7 @@ This is a premium AI Chat application built with **SolidJS** and **TypeScript** 
 ## Features
 
 - **Obsidian Dark & Ultraviolet styling**: A high-fidelity CSS design featuring beautiful translucent glassmorphism elements, glowing borders, custom scrollbar tracks, floating input wrappers, and smooth bouncing typing indicators.
-- **Agent Development Kit (`@google/adk`) integration**: Runs a server-side `LlmAgent` and `InMemoryRunner` for conversational intelligence.
+- **Agent Development Kit (`@google/adk`) integration**: Runs a server-side `LlmAgent` and `Runner` with a globally persistent `InMemorySessionService` for conversational intelligence and history retention.
 - **LocalStorage API Key Persistence**: The Gemini API key is securely entered by the user in the browser and stored locally. It is sent as a payload in every query to dynamically authenticate requests on the Express server.
 - **Customizable System Instructions**: Fine-tune the agent's persona directly from the settings drawer in the UI!
 - **Active Session Reset**: Start a clean session thread instantly with the `New Session` button.
