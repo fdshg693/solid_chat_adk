@@ -5,23 +5,21 @@
   "type": "module",
   "scripts": {
     "dev:frontend": "vite",
-    "dev:backend": "node --import tsx --watch-path=server.ts server.ts",
-    "dev": "concurrently --kill-others \"vite\" \"node --import tsx --watch-path=server.ts server.ts\"",
+    "dev:backend": "node --import tsx --watch-path=server server/index.ts",
+    "dev": "concurrently --kill-others \"vite\" \"node --import tsx --watch-path=server server/index.ts\"",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "start": "tsx server.ts"
+    "start": "tsx server/index.ts"
   },
   "dependencies": {
     "@google/adk": "^1.1.0",
+    "@hono/node-server": "^2.0.4",
     "@tavily/core": "^0.7.3",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "hono": "^4.12.23",
     "solid-js": "^1.9.12",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
     "@types/node": "^22.13.0",
     "concurrently": "^9.1.2",
     "tsx": "^4.19.2",

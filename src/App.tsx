@@ -17,19 +17,19 @@ function App() {
   // Config & State Signals
   const [apiKey, setApiKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
   const [tempKey, setTempKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
-  
+
   const [tavilyApiKey, setTavilyApiKey] = createSignal(localStorage.getItem('tavily_api_key') || '');
   const [tempTavilyKey, setTempTavilyKey] = createSignal(localStorage.getItem('tavily_api_key') || '');
-  
+
   const [model, setModel] = createSignal(localStorage.getItem('gemini_model') || 'gemini-2.5-flash');
-  
+
   const [instruction, setInstruction] = createSignal(
     localStorage.getItem('gemini_system_instruction') || 'You are a helpful and concise AI assistant. Address the user directly.'
   );
-  
+
   const [userMemo, setUserMemo] = createSignal(localStorage.getItem('user_memo') || '');
 
-  
+
   const [showSettings, setShowSettings] = createSignal(!localStorage.getItem('gemini_api_key'));
   const [userInput, setUserInput] = createSignal('');
   const [messages, setMessages] = createSignal<Message[]>([]);
@@ -71,7 +71,7 @@ function App() {
 
   const [sessions, setSessions] = createSignal<ChatSession[]>(initialSessions);
   const [sessionId, setSessionId] = createSignal<string>(initialSessionId);
-  
+
   let scrollerRef: HTMLDivElement | undefined;
 
   // Lifecycle
@@ -105,18 +105,18 @@ function App() {
       setErrorMessage('Please enter a valid API key.');
       return;
     }
-    
+
     localStorage.setItem('gemini_api_key', key);
     localStorage.setItem('gemini_model', model());
     localStorage.setItem('gemini_system_instruction', instruction());
-    
+
     const tavilyKey = tempTavilyKey().trim();
     if (tavilyKey) {
       localStorage.setItem('tavily_api_key', tavilyKey);
     } else {
       localStorage.removeItem('tavily_api_key');
     }
-    
+
     setApiKey(key);
     setTavilyApiKey(tavilyKey);
     setErrorMessage('');
@@ -174,7 +174,7 @@ function App() {
   const deleteSession = (id: string) => {
     if (confirm('この会話履歴を削除してもよろしいですか？')) {
       localStorage.removeItem(`chat_history_${id}`);
-      
+
       const updatedSessions = sessions().filter(s => s.id !== id);
       setSessions(updatedSessions);
       localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
@@ -192,7 +192,7 @@ function App() {
   // Action: Send Query to backend Express proxy
   const sendMessage = async (e: Event) => {
     e.preventDefault();
-    
+
     const query = userInput().trim();
     if (!query) return;
 
@@ -210,7 +210,7 @@ function App() {
       text: query,
       timestamp: Date.now()
     };
-    
+
     const updatedMessages = [...messages(), newUserMsg];
     setMessages(updatedMessages);
     setUserInput('');
@@ -257,7 +257,7 @@ function App() {
 
       const finalMessages = [...updatedMessages, newAssistantMsg];
       setMessages(finalMessages);
-      
+
       // Save history
       localStorage.setItem(`chat_history_${sessionId()}`, JSON.stringify(finalMessages));
 
@@ -274,7 +274,7 @@ function App() {
         setSessions(updatedSessions);
         localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
       }
-      
+
     } catch (err: any) {
       console.error('Chat error:', err);
       setErrorMessage(err.message || 'Network error occurred. Ensure your local server is running.');
@@ -319,7 +319,7 @@ function App() {
           >
             ⚙️ Settings
           </button>
-          
+
           <button
             class="btn-glass"
             onClick={createNewSession}
@@ -500,7 +500,7 @@ function App() {
               </div>
             </div>
           </div>
-          
+
           <div style="margin-top: auto; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
             This chat runs an unmodified <strong>LlmAgent</strong> orchestrated by a <strong>Runner</strong> (with <strong>InMemorySessionService</strong>) using the <strong>Agent Development Kit</strong>.
           </div>
@@ -515,7 +515,7 @@ function App() {
                 <div class="welcome-logo">🌌</div>
                 <h2 class="welcome-title">Welcome to Ultraviolet</h2>
                 <p class="welcome-desc">
-                  This chat MVP demonstrates SolidJS running a local Node-backed `@google/adk` LlmAgent. 
+                  This chat MVP demonstrates SolidJS running a local Node-backed `@google/adk` LlmAgent.
                   Enter your API key above to start chat.
                 </p>
                 <Show when={!apiKey()}>
@@ -595,7 +595,7 @@ function App() {
                 ➡️
               </button>
             </form>
-            
+
             <div class="input-footer-info">
               <span>Press Enter to send</span>
               <span>SolidJS + @google/adk MVP</span>
