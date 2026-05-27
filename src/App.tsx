@@ -27,6 +27,9 @@ function App() {
     localStorage.getItem('gemini_system_instruction') || 'You are a helpful and concise AI assistant. Address the user directly.'
   );
   
+  const [userMemo, setUserMemo] = createSignal(localStorage.getItem('user_memo') || '');
+
+  
   const [showSettings, setShowSettings] = createSignal(!localStorage.getItem('gemini_api_key'));
   const [userInput, setUserInput] = createSignal('');
   const [messages, setMessages] = createSignal<Message[]>([]);
@@ -228,7 +231,8 @@ function App() {
           tavilyApiKey: tavilyApiKey(),
           sessionId: sessionId(),
           instruction: instruction(),
-          model: model()
+          model: model(),
+          userMemo: userMemo()
         })
       });
 
@@ -434,6 +438,21 @@ function App() {
                 <span class="sidebar-info-val">LlmAgent</span>
               </div>
             </div>
+          </div>
+
+          <div>
+            <h3 class="sidebar-title">📝 ユーザーメモ</h3>
+            <textarea
+              class="input-text"
+              rows={4}
+              style="resize: vertical; margin-bottom: 1rem; width: 100%; box-sizing: border-box; font-size: 0.85rem;"
+              placeholder="AIに読ませたいメモを入力..."
+              value={userMemo()}
+              onInput={(e) => {
+                setUserMemo(e.currentTarget.value);
+                localStorage.setItem('user_memo', e.currentTarget.value);
+              }}
+            />
           </div>
 
           <div>

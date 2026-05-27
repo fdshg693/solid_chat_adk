@@ -21,7 +21,7 @@ app.get('/api/health', (_req, res) => {
 
 // Primary chat endpoint
 app.post('/api/chat', async (req, res) => {
-  const { message, apiKey, tavilyApiKey, sessionId, instruction, model } = req.body;
+  const { message, apiKey, tavilyApiKey, sessionId, instruction, model, userMemo } = req.body;
 
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     return res.status(400).json({ error: 'Gemini API key is required and must be provided.' });
@@ -45,6 +45,22 @@ app.post('/api/chat', async (req, res) => {
     console.log(`[Backend] Initializing LlmAgent with model: ${selectedModel}`);
     
     const tools = [];
+    
+    // Always register the readUserMemo tool if userMemo field exists in the request
+    if (userMemo !== undefined) {
+      const readMemoTool = new FunctionTool({
+        name: 'readUserMemo',
+        description: 'Read the contents of the user\'s personal memo pad. Use this to retrieve any notes or information the user has jotted down for you to remember or reference.',
+        parameters: z.object({}),
+        execute: async () => {
+          console.log(`[Backend] Executing readUserMemo tool.`);
+          return { memo: userMemo || 'The memo is currently empty.' };
+        },
+      });
+      tools.push(readMemoTool);
+      console.log(`[Backend] Registered readUserMemo tool.`);
+    }
+
     if (tavilyApiKey && typeof tavilyApiKey === 'string' && tavilyApiKey.trim() !== '') {
       const tvly = tavily({ apiKey: tavilyApiKey.trim() });
       const searchTool = new FunctionTool({
