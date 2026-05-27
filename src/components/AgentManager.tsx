@@ -1,5 +1,5 @@
 import { For, createSignal } from 'solid-js';
-import { agents, setAgents, showAgentManager, setShowAgentManager, type Agent } from '../store/appState';
+import { agents, setAgents, type Agent } from '../store/appState';
 
 export function AgentManager() {
   const [editingId, setEditingId] = createSignal<string | null>(null);
@@ -9,7 +9,7 @@ export function AgentManager() {
   const [newName, setNewName] = createSignal('');
   const [newPrompt, setNewPrompt] = createSignal('');
 
-  const closeDrawer = () => setShowAgentManager(false);
+
 
   const startEdit = (agent: Agent) => {
     setEditingId(agent.id);
@@ -74,11 +74,10 @@ export function AgentManager() {
   };
 
   return (
-    <div class={`drawer-panel ${showAgentManager() ? 'open' : ''}`}>
-      <div class="drawer-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h2 style="margin: 0; color: var(--text-bright);">Agent Manager</h2>
-          <button class="btn-glass" onClick={closeDrawer} style="padding: 0.3rem 0.6rem;">✕</button>
+    <div class="agent-manager-view">
+      <div class="agent-manager-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h2 style="margin: 0; color: var(--text-primary); font-family: var(--font-family-display); font-size: 1.8rem;">Agent Manager</h2>
         </div>
 
         <div style="margin-bottom: 2rem;">

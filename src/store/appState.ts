@@ -44,7 +44,7 @@ export interface Agent {
 
 export const [agents, setAgents] = createSignal<Agent[]>([]);
 export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem('active_agent_id') || '');
-export const [showAgentManager, setShowAgentManager] = createSignal(false);
+export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents'>('chat');
 
 // Helper to fetch with retry to allow backend time to start up
 const fetchWithRetry = async (url: string, retries = 5, delay = 1000) => {

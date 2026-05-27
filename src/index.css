@@ -746,3 +746,167 @@ body {
   transform: scale(1.15);
 }
 
+/* Tab Navigation inside Header */
+.tab-navigation button.active {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+  border-color: var(--color-secondary);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+/* Agent Manager Full View */
+.agent-manager-view {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease;
+}
+
+.agent-manager-content {
+  width: 100%;
+  max-width: 800px;
+  background: rgba(18, 20, 32, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Agent Selector UI */
+.agent-selector-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background: rgba(10, 11, 18, 0.4);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 5;
+  position: relative;
+}
+
+.agent-selector-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.agent-dropdown {
+  position: relative;
+}
+
+.agent-dropdown-toggle {
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+}
+
+.agent-dropdown-toggle:hover {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+}
+
+.agent-dropdown.open .agent-dropdown-toggle {
+  background: rgba(124, 58, 237, 0.2);
+  border-color: var(--color-primary);
+}
+
+.agent-icon {
+  font-size: 1.1rem;
+}
+
+.agent-dropdown-arrow {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.agent-dropdown.open .agent-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.agent-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 320px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+  animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.agent-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.agent-option:last-child {
+  border-bottom: none;
+}
+
+.agent-option:hover {
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.agent-option.selected {
+  background: rgba(6, 182, 212, 0.1);
+  border-left: 3px solid var(--color-secondary);
+}
+
+.agent-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.agent-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.agent-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: transparent;
+}

@@ -4,6 +4,9 @@ import { AgentManager } from './components/AgentManager';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/Chat/MessageList';
 import { InputSection } from './components/Chat/InputSection';
+import { AgentSelector } from './components/Chat/AgentSelector';
+import { currentTab } from './store/appState';
+import { Show } from 'solid-js';
 
 function App() {
   return (
@@ -18,23 +21,28 @@ function App() {
       {/* Settings Drawer Panel */}
       <SettingsDrawer />
 
-      {/* Agent Manager Panel */}
-      <AgentManager />
+      <Show when={currentTab() === 'agents'}>
+        <AgentManager />
+      </Show>
 
       {/* Main workspace */}
-      <div class="chat-workspace">
-        {/* Left Sidebar details */}
-        <Sidebar />
+      <Show when={currentTab() === 'chat'}>
+        <div class="chat-workspace">
+          {/* Left Sidebar details */}
+          <Sidebar />
 
-        {/* Right chat view */}
-        <main class="chat-container">
-          {/* Scrollable messages area */}
-          <MessageList />
+          {/* Right chat view */}
+          <main class="chat-container">
+            <AgentSelector />
+            
+            {/* Scrollable messages area */}
+            <MessageList />
 
-          {/* Footer Input block */}
-          <InputSection />
-        </main>
-      </div>
+            {/* Footer Input block */}
+            <InputSection />
+          </main>
+        </div>
+      </Show>
     </div>
   );
 }

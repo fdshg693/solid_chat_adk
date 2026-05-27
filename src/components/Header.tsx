@@ -4,7 +4,9 @@ import {
   tavilyApiKey, 
   showSettings, 
   setShowSettings, 
-  createNewSession 
+  createNewSession,
+  currentTab,
+  setCurrentTab
 } from '../store/appState';
 
 export function Header() {
@@ -16,6 +18,21 @@ export function Header() {
           <h1 class="brand-title">Ultraviolet Chat</h1>
           <p class="brand-tagline">@google/adk Agent MVP</p>
         </div>
+      </div>
+
+      <div class="tab-navigation" style="display: flex; gap: 1rem; position: absolute; left: 50%; transform: translateX(-50%);">
+        <button
+          class={`btn-glass ${currentTab() === 'chat' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('chat')}
+        >
+          💬 Chat
+        </button>
+        <button
+          class={`btn-glass ${currentTab() === 'agents' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('agents')}
+        >
+          🤖 Agents
+        </button>
       </div>
 
       <div class="action-buttons">
