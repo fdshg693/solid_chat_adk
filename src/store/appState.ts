@@ -25,7 +25,33 @@ export const [instruction, setInstruction] = createSignal(
   localStorage.getItem('gemini_system_instruction') || 'You are a helpful and concise AI assistant. Address the user directly.'
 );
 
-export const [userMemo, setUserMemo] = createSignal(localStorage.getItem('user_memo') || '');
+export interface UserMemo {
+  id: string;
+  title: string;
+  content: string;
+}
+
+const getInitialMemos = (): UserMemo[] => {
+  const saved = localStorage.getItem('user_memos');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to parse user memos', e);
+    }
+  }
+  // Migration from old single memo
+  const oldMemo = localStorage.getItem('user_memo');
+  if (oldMemo) {
+    return [{ id: `memo-${Date.now()}`, title: 'Memo 1', content: oldMemo }];
+  }
+  return [];
+};
+
+export const [userMemos, setUserMemos] = createSignal<UserMemo[]>(getInitialMemos());
 
 export const [showSettings, setShowSettings] = createSignal(!localStorage.getItem('gemini_api_key'));
 export const [userInput, setUserInput] = createSignal('');
@@ -216,7 +242,7 @@ export const sendMessage = async (e: Event) => {
         sessionId: sessionId(),
         instruction: instruction(),
         model: model(),
-        userMemo: userMemo()
+        userMemos: userMemos()
       })
     });
 

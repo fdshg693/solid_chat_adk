@@ -1,8 +1,9 @@
 import { For } from 'solid-js';
 import {
   model,
-  userMemo,
-  setUserMemo,
+  userMemos,
+  setUserMemos,
+  type UserMemo,
   sessions,
   sessionId,
   selectSession,
@@ -11,6 +12,31 @@ import {
 } from '../store/appState';
 
 export function Sidebar() {
+  const addMemo = () => {
+    const newMemo: UserMemo = { id: `memo-${Date.now()}`, title: `New Memo ${userMemos().length + 1}`, content: '' };
+    const updated = [...userMemos(), newMemo];
+    setUserMemos(updated);
+    localStorage.setItem('user_memos', JSON.stringify(updated));
+  };
+
+  const updateMemoTitle = (id: string, title: string) => {
+    const updated = userMemos().map(m => m.id === id ? { ...m, title } : m);
+    setUserMemos(updated);
+    localStorage.setItem('user_memos', JSON.stringify(updated));
+  };
+
+  const updateMemoContent = (id: string, content: string) => {
+    const updated = userMemos().map(m => m.id === id ? { ...m, content } : m);
+    setUserMemos(updated);
+    localStorage.setItem('user_memos', JSON.stringify(updated));
+  };
+
+  const deleteMemo = (id: string) => {
+    const updated = userMemos().filter(m => m.id !== id);
+    setUserMemos(updated);
+    localStorage.setItem('user_memos', JSON.stringify(updated));
+  };
+
   return (
     <aside class="sidebar-panel">
       <div>
@@ -31,19 +57,44 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div>
-        <h3 class="sidebar-title">📝 ユーザーメモ</h3>
-        <textarea
-          class="input-text"
-          rows={4}
-          style="resize: vertical; margin-bottom: 1rem; width: 100%; box-sizing: border-box; font-size: 0.85rem;"
-          placeholder="AIに読ませたいメモを入力..."
-          value={userMemo()}
-          onInput={(e) => {
-            setUserMemo(e.currentTarget.value);
-            localStorage.setItem('user_memo', e.currentTarget.value);
-          }}
-        />
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="sidebar-title" style="margin: 0;">📝 ユーザーメモ</h3>
+          <button class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onClick={addMemo}>+ 追加</button>
+        </div>
+        <div class="sidebar-sessions-list" style="max-height: 300px; overflow-y: auto;">
+          <For each={userMemos()}>
+            {(memo) => (
+              <div class="sidebar-card" style="margin-bottom: 0.5rem; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <input
+                    type="text"
+                    class="input-text"
+                    style="flex: 1; margin-right: 0.5rem; padding: 0.2rem 0.4rem; font-size: 0.8rem;"
+                    value={memo.title}
+                    placeholder="メモのタイトル..."
+                    onInput={(e) => updateMemoTitle(memo.id, e.currentTarget.value)}
+                  />
+                  <button
+                    class="btn-delete-session"
+                    onClick={() => deleteMemo(memo.id)}
+                    title="メモを削除"
+                  >
+                    🗑️
+                  </button>
+                </div>
+                <textarea
+                  class="input-text"
+                  rows={3}
+                  style="resize: vertical; width: 100%; box-sizing: border-box; font-size: 0.8rem; padding: 0.4rem;"
+                  placeholder="メモの内容..."
+                  value={memo.content}
+                  onInput={(e) => updateMemoContent(memo.id, e.currentTarget.value)}
+                />
+              </div>
+            )}
+          </For>
+        </div>
       </div>
 
       <div>

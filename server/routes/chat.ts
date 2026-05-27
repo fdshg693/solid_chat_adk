@@ -6,7 +6,7 @@ const chatApp = new Hono();
 
 chatApp.post('/', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { message, apiKey, tavilyApiKey, sessionId, instruction, model, userMemo } = body;
+  const { message, apiKey, tavilyApiKey, sessionId, instruction, model, userMemos } = body;
 
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     return c.json({ error: 'Gemini API key is required and must be provided.' }, 400);
@@ -37,7 +37,7 @@ chatApp.post('/', async (c) => {
       model: selectedModel,
       instruction: systemInstruction,
       toolsOptions: {
-        userMemo,
+        userMemos,
         tavilyApiKey
       }
     });

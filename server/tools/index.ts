@@ -1,18 +1,19 @@
-import { createReadUserMemoTool } from './readUserMemo';
+import { createListUserMemoTitlesTool, createReadUserMemoTool, UserMemoPayload } from './userMemos';
 import { createTavilySearchTool } from './tavilySearch';
 import { FunctionTool } from '@google/adk';
 
 export interface GetToolsOptions {
-  userMemo?: string;
+  userMemos?: UserMemoPayload[];
   tavilyApiKey?: string;
 }
 
 export const getAvailableTools = (options: GetToolsOptions): FunctionTool[] => {
   const tools: FunctionTool[] = [];
 
-  if (options.userMemo !== undefined) {
-    tools.push(createReadUserMemoTool(options.userMemo));
-    console.log(`[Backend] Registered readUserMemo tool.`);
+  if (options.userMemos && options.userMemos.length > 0) {
+    tools.push(createListUserMemoTitlesTool(options.userMemos));
+    tools.push(createReadUserMemoTool(options.userMemos));
+    console.log(`[Backend] Registered listUserMemoTitles and readUserMemo tools.`);
   }
 
   if (options.tavilyApiKey && options.tavilyApiKey.trim() !== '') {
