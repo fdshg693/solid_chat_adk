@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import { agents, type UserMemo } from '../../store/appState';
+import { agents, users, type UserMemo } from '../../store/appState';
 
 interface MemoCardProps {
   memo: UserMemo;
@@ -39,10 +39,10 @@ export function MemoCard(props: MemoCardProps) {
           <select
             class="input-text"
             style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--bg-dark); color: var(--text-bright);"
-            value={props.memo.creator || 'user'}
+            value={props.memo.creator}
             onChange={(e) => props.onUpdate(props.memo.id, { creator: e.currentTarget.value })}
           >
-            <option value="user">User</option>
+            <For each={users()}>{(u) => <option value={u.name}>{u.name}</option>}</For>
             <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
           </select>
         </div>
@@ -52,10 +52,10 @@ export function MemoCard(props: MemoCardProps) {
           <select
             class="input-text"
             style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--bg-dark); color: var(--text-bright);"
-            value={props.memo.updater || 'user'}
+            value={props.memo.updater}
             onChange={(e) => props.onUpdate(props.memo.id, { updater: e.currentTarget.value })}
           >
-            <option value="user">User</option>
+            <For each={users()}>{(u) => <option value={u.name}>{u.name}</option>}</For>
             <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
           </select>
         </div>
@@ -65,14 +65,18 @@ export function MemoCard(props: MemoCardProps) {
       <div style="display: flex; flex-direction: column; gap: 0.25rem;">
         <label style="font-size: 0.7rem; color: var(--text-muted);">Target Audiences</label>
         <div class="checklist-group" style="max-height: 80px; padding: 0.5rem;">
-          <label class="checklist-item">
-            <input
-              type="checkbox"
-              checked={(props.memo.targetAudiences || []).includes('user')}
-              onChange={() => props.toggleAudience(props.memo.id, 'user')}
-            />
-            <span style="font-size: 0.75rem;">User</span>
-          </label>
+          <For each={users()}>
+            {(u) => (
+              <label class="checklist-item">
+                <input
+                  type="checkbox"
+                  checked={(props.memo.targetAudiences || []).includes(u.name)}
+                  onChange={() => props.toggleAudience(props.memo.id, u.name)}
+                />
+                <span style="font-size: 0.75rem;">{u.name}</span>
+              </label>
+            )}
+          </For>
           <For each={agents()}>
             {(a) => (
               <label class="checklist-item">
