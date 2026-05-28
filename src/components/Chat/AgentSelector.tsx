@@ -11,6 +11,13 @@ export function AgentSelector() {
     return agent ? agent.name : 'Global Default';
   };
 
+  const activeAgentIcon = () => {
+    const id = selectedAgentId();
+    if (!id) return '🤖';
+    const agent = agents().find(a => a.id === id);
+    return agent?.avatar || '🧠';
+  };
+
   const selectAgent = (id: string) => {
     setSelectedAgentId(id);
     localStorage.setItem('active_agent_id', id);
@@ -25,7 +32,7 @@ export function AgentSelector() {
           class="agent-dropdown-toggle" 
           onClick={() => setIsOpen(!isOpen())}
         >
-          <span class="agent-icon">🤖</span>
+          <span class="agent-icon">{activeAgentIcon()}</span>
           <span class="agent-name">{activeAgentName()}</span>
           <span class="agent-dropdown-arrow">▼</span>
         </button>
@@ -48,7 +55,7 @@ export function AgentSelector() {
                   class={`agent-option ${selectedAgentId() === agent.id ? 'selected' : ''}`}
                   onClick={() => selectAgent(agent.id)}
                 >
-                  <span class="agent-icon">🧠</span>
+                  <span class="agent-icon">{agent.avatar || '🧠'}</span>
                   <div class="agent-details">
                     <div class="agent-name">{agent.name}</div>
                     <div class="agent-desc" title={agent.systemPrompt}>

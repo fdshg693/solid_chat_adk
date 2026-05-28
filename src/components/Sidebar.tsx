@@ -77,7 +77,7 @@ export function Sidebar() {
         <div class="sidebar-card">
           <div class="sidebar-info-row">
             <span>Session ID</span>
-            <span class="sidebar-info-val" style="font-size: 0.65rem; word-break: break-all;">{sessionId().substring(0, 15)}...</span>
+            <span class="sidebar-info-val" title={sessionId()} style="font-size: 0.65rem; word-break: break-all; cursor: help;">{sessionId().substring(0, 15)}...</span>
           </div>
           <div class="sidebar-info-row">
             <span>Messages</span>

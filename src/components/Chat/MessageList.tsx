@@ -6,7 +6,10 @@ import {
   setScrollerRef, 
   sessionId, 
   setMessages, 
-  scrollToBottom 
+  scrollToBottom,
+  activeUser,
+  agents,
+  selectedAgentId
 } from '../../store/appState';
 
 export function MessageList() {
@@ -24,6 +27,13 @@ export function MessageList() {
     }
   });
 
+  const getAssistantAvatar = () => {
+    const id = selectedAgentId();
+    if (!id) return '🤖';
+    const agent = agents().find(a => a.id === id);
+    return agent?.avatar || '🤖';
+  };
+
   return (
     <div class="messages-scroller" ref={(el) => setScrollerRef(el)}>
       <Show when={messages().length === 0}>
@@ -36,7 +46,7 @@ export function MessageList() {
           <div class={`message-row ${msg.role}`}>
             <div class="message-bubble-wrapper">
               <div class={`message-avatar ${msg.role}`}>
-                {msg.role === 'user' ? '👤' : '🤖'}
+                {msg.role === 'user' ? activeUser().avatar : getAssistantAvatar()}
               </div>
               <div>
                 <div class="message-bubble">
@@ -55,7 +65,7 @@ export function MessageList() {
       <Show when={loading()}>
         <div class="message-row assistant">
           <div class="message-bubble-wrapper">
-            <div class="message-avatar assistant">🤖</div>
+            <div class="message-avatar assistant">{getAssistantAvatar()}</div>
             <div>
               <div class="message-bubble">
                 <div class="typing-indicator">

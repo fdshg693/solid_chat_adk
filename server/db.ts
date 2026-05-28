@@ -23,13 +23,15 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS agents (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    systemPrompt TEXT NOT NULL
+    systemPrompt TEXT NOT NULL,
+    avatar TEXT
   );
 `);
 
 try { db.exec("ALTER TABLE memos ADD COLUMN creator TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE memos ADD COLUMN updater TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE memos ADD COLUMN targetAudiences TEXT;"); } catch (e) {}
+try { db.exec("ALTER TABLE agents ADD COLUMN avatar TEXT;"); } catch (e) {}
 
 
 export interface UserMemo {
@@ -98,6 +100,7 @@ export interface Agent {
   id: string;
   name: string;
   systemPrompt: string;
+  avatar?: string;
 }
 
 export const getAllAgents = (): Agent[] => {
@@ -113,11 +116,11 @@ export const getAgentById = (id: string): Agent | undefined => {
 export const saveAgent = (agent: Agent): void => {
   const existing = getAgentById(agent.id);
   if (existing) {
-    const stmt = db.prepare('UPDATE agents SET name = ?, systemPrompt = ? WHERE id = ?');
-    stmt.run(agent.name, agent.systemPrompt, agent.id);
+    const stmt = db.prepare('UPDATE agents SET name = ?, systemPrompt = ?, avatar = ? WHERE id = ?');
+    stmt.run(agent.name, agent.systemPrompt, agent.avatar || '🤖', agent.id);
   } else {
-    const stmt = db.prepare('INSERT INTO agents (id, name, systemPrompt) VALUES (?, ?, ?)');
-    stmt.run(agent.id, agent.name, agent.systemPrompt);
+    const stmt = db.prepare('INSERT INTO agents (id, name, systemPrompt, avatar) VALUES (?, ?, ?, ?)');
+    stmt.run(agent.id, agent.name, agent.systemPrompt, agent.avatar || '🤖');
   }
 };
 

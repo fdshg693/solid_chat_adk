@@ -5,22 +5,26 @@ export function AgentManager() {
   const [editingId, setEditingId] = createSignal<string | null>(null);
   const [editName, setEditName] = createSignal('');
   const [editPrompt, setEditPrompt] = createSignal('');
+  const [editAvatar, setEditAvatar] = createSignal('🤖');
 
   const [newName, setNewName] = createSignal('');
   const [newPrompt, setNewPrompt] = createSignal('');
+  const [newAvatar, setNewAvatar] = createSignal('🤖');
 
-
+  const avatarOptions = ['🤖', '👾', '🧙‍♂️', '🦸‍♀️', '🕵️‍♂️', '🎓', '🎨', '🚀', '🧠', '💼', '🏥', '🔬'];
 
   const startEdit = (agent: Agent) => {
     setEditingId(agent.id);
     setEditName(agent.name);
     setEditPrompt(agent.systemPrompt);
+    setEditAvatar(agent.avatar || '🤖');
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditName('');
     setEditPrompt('');
+    setEditAvatar('🤖');
   };
 
   const saveEdit = async () => {
@@ -31,7 +35,7 @@ export function AgentManager() {
       const response = await fetch(`/api/agents/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName().trim(), systemPrompt: editPrompt().trim() })
+        body: JSON.stringify({ name: editName().trim(), systemPrompt: editPrompt().trim(), avatar: editAvatar() })
       });
       const data = await response.json();
       if (data.success) {
@@ -60,13 +64,14 @@ export function AgentManager() {
       const response = await fetch('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name: newName().trim(), systemPrompt: newPrompt().trim() })
+        body: JSON.stringify({ id, name: newName().trim(), systemPrompt: newPrompt().trim(), avatar: newAvatar() })
       });
       const data = await response.json();
       if (data.success) {
         setAgents([...agents(), data.agent]);
         setNewName('');
         setNewPrompt('');
+        setNewAvatar('🤖');
       }
     } catch (e) {
       console.error('Failed to create agent', e);
@@ -98,6 +103,33 @@ export function AgentManager() {
               onInput={(e) => setNewPrompt(e.currentTarget.value)}
               style="resize: vertical;"
             />
+            
+            {/* Avatar Select Panel */}
+            <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Select Agent Avatar</span>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                <For each={avatarOptions}>
+                  {(emoji) => (
+                    <button
+                      type="button"
+                      onClick={() => setNewAvatar(emoji)}
+                      style={{
+                        padding: '0.4rem',
+                        'font-size': '1.25rem',
+                        background: newAvatar() === emoji ? 'rgba(124, 58, 237, 0.25)' : 'rgba(255, 255, 255, 0.03)',
+                        border: newAvatar() === emoji ? '1px solid var(--color-primary)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        'border-radius': '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.25s ease',
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  )}
+                </For>
+              </div>
+            </div>
+
             <button class="btn-primary" onClick={createAgent} disabled={!newName().trim() || !newPrompt().trim()}>
               Create Agent
             </button>
@@ -125,7 +157,32 @@ export function AgentManager() {
                         onInput={(e) => setEditPrompt(e.currentTarget.value)}
                         style="resize: vertical;"
                       />
-                      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                      {/* Edit Avatar Select Panel */}
+                      <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem;">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Edit Agent Avatar</span>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                          <For each={avatarOptions}>
+                            {(emoji) => (
+                              <button
+                                type="button"
+                                onClick={() => setEditAvatar(emoji)}
+                                style={{
+                                  padding: '0.3rem',
+                                  'font-size': '1.1rem',
+                                  background: editAvatar() === emoji ? 'rgba(124, 58, 237, 0.25)' : 'rgba(255, 255, 255, 0.03)',
+                                  border: editAvatar() === emoji ? '1px solid var(--color-primary)' : '1px solid rgba(255, 255, 255, 0.05)',
+                                  'border-radius': '6px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.25s ease',
+                                }}
+                              >
+                                {emoji}
+                              </button>
+                            )}
+                          </For>
+                        </div>
+                      </div>
+                      <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem;">
                         <button class="btn-secondary" onClick={cancelEdit}>Cancel</button>
                         <button class="btn-primary" onClick={saveEdit}>Save</button>
                       </div>
@@ -133,7 +190,10 @@ export function AgentManager() {
                   ) : (
                     <>
                       <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="color: var(--accent-cyan);">{agent.name}</strong>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                          <span style="font-size: 1.25rem;">{agent.avatar || '🤖'}</span>
+                          <strong style="color: var(--accent-cyan);">{agent.name}</strong>
+                        </div>
                         <div style="display: flex; gap: 0.3rem;">
                           <button class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onClick={() => startEdit(agent)}>Edit</button>
                           <button class="btn-delete-session" style="padding: 0.2rem 0.5rem;" onClick={() => deleteAgent(agent.id)}>🗑️</button>

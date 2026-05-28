@@ -47,4 +47,5 @@ This project is an AI Chat application built with a dual-process architecture:
 - **Customizable System Instructions**: Custom system instructions can be adjusted via a dedicated settings tab/view in the client UI.
 - **User Memos**: Memos can be managed under a dedicated Memos tab in the client UI. Target audiences can be configured with an elegant checkbox-based multi-select layout.
 - **Unauthenticated User Switcher & Management**: Switch active user profiles directly from the Settings tab. When logged in as `admin`, an exclusive glassmorphic User Management panel is shown to create and delete users (preventing self-deletion). The active user is displayed dynamically in the Header bar with their name and custom emoji avatar.
+- **Agent Avatar Management**: Custom emoji avatars can be selected for agents during creation or editing. The active agent's avatar is displayed dynamically in the Agent Selector dropdown and is automatically rendered as the assistant profile picture in message bubble histories.
 

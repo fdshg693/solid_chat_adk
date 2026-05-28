@@ -116,6 +116,7 @@ export interface Agent {
   id: string;
   name: string;
   systemPrompt: string;
+  avatar?: string;
 }
 
 export const [agents, setAgents] = createSignal<Agent[]>([]);

@@ -16,13 +16,13 @@ agentsApp.get('/', (c) => {
 agentsApp.post('/', async (c) => {
   try {
     const body = await c.req.json();
-    const { id, name, systemPrompt } = body;
+    const { id, name, systemPrompt, avatar } = body;
     
     if (!id || !name || !systemPrompt) {
       return c.json({ error: 'Missing required fields' }, 400);
     }
     
-    const newAgent: Agent = { id, name, systemPrompt };
+    const newAgent: Agent = { id, name, systemPrompt, avatar: avatar || '🤖' };
     saveAgent(newAgent);
     return c.json({ success: true, agent: newAgent });
   } catch (error: any) {
@@ -35,7 +35,7 @@ agentsApp.put('/:id', async (c) => {
   try {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const { name, systemPrompt } = body;
+    const { name, systemPrompt, avatar } = body;
     
     const existing = getAgentById(id);
     if (!existing) {
@@ -45,7 +45,8 @@ agentsApp.put('/:id', async (c) => {
     const updatedAgent: Agent = { 
       id, 
       name: name ?? existing.name, 
-      systemPrompt: systemPrompt ?? existing.systemPrompt 
+      systemPrompt: systemPrompt ?? existing.systemPrompt,
+      avatar: avatar ?? existing.avatar
     };
     
     saveAgent(updatedAgent);
