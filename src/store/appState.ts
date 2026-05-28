@@ -44,7 +44,7 @@ export interface Agent {
 
 export const [agents, setAgents] = createSignal<Agent[]>([]);
 export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem('active_agent_id') || '');
-export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents' | 'settings'>(
+export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents' | 'settings' | 'memos'>(
   localStorage.getItem('gemini_api_key') ? 'chat' : 'settings'
 );
 

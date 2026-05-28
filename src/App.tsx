@@ -1,6 +1,7 @@
 import { Header } from './components/Header';
 import { SettingsView } from './components/SettingsDrawer';
 import { AgentManager } from './components/AgentManager';
+import { MemoManager } from './components/MemoManager';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/Chat/MessageList';
 import { InputSection } from './components/Chat/InputSection';
@@ -20,6 +21,10 @@ function App() {
 
       <Show when={currentTab() === 'agents'}>
         <AgentManager />
+      </Show>
+
+      <Show when={currentTab() === 'memos'}>
+        <MemoManager />
       </Show>
 
       <Show when={currentTab() === 'settings'}>

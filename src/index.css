@@ -921,3 +921,63 @@ body {
   z-index: 90;
   background: transparent;
 }
+
+/* Improve select dropdown option readability in Dark Mode */
+select option {
+  background-color: #121420; /* Matches --bg-surface */
+  color: #f1f5f9; /* Matches --text-primary */
+}
+
+/* Checklist group styles for multi-select alternative */
+.checklist-group {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.checklist-item input[type="checkbox"] {
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  padding: 7px;
+  border-radius: 4px;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.checklist-item input[type="checkbox"]:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checklist-item input[type="checkbox"]:checked:after {
+  content: '\2714';
+  font-size: 10px;
+  position: absolute;
+  top: 0px;
+  left: 2px;
+  color: #fff;
+}
+
+.checklist-item:hover input[type="checkbox"] {
+  border-color: var(--color-primary);
+}

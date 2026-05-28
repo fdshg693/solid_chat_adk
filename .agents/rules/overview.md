@@ -24,6 +24,7 @@ This project is an AI Chat application built with a dual-process architecture:
 - `public/` - Static public assets.
 - `src/`
   - `assets/` - App asset directories.
+  - `components/` - App UI components including Header, Sidebar, AgentManager, SettingsDrawer, MemoManager, and Chat subcomponents.
   - `App.tsx` - Primary SolidJS frontend client.
   - `index.css` - Obsidian & Ultraviolet CSS design system.
   - `index.tsx` - SolidJS client mounter.
@@ -44,3 +45,4 @@ This project is an AI Chat application built with a dual-process architecture:
 - **Dual-Process Motivation**: `@google/adk` is server-side and depends on Node APIs. Running a local Express backend avoids exposing API keys or relying on client-side polyfills.
 - **Active Session Reset**: Sessions can be started fresh with a settings option in the UI, which resets the state and session IDs.
 - **Customizable System Instructions**: Custom system instructions can be adjusted via a dedicated settings tab/view in the client UI.
+- **User Memos**: Memos can be managed under a dedicated Memos tab in the client UI. Target audiences can be configured with an elegant checkbox-based multi-select layout.

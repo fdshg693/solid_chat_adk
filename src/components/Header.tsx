@@ -32,6 +32,12 @@ export function Header() {
           🤖 Agents
         </button>
         <button
+          class={`btn-glass ${currentTab() === 'memos' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('memos')}
+        >
+          📝 Memos
+        </button>
+        <button
           class={`btn-glass ${currentTab() === 'settings' ? 'active' : ''}`}
           onClick={() => setCurrentTab('settings')}
         >
