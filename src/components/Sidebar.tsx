@@ -6,6 +6,7 @@ import {
   selectSession,
   deleteSession,
   messages,
+  createNewSession,
 } from '../store/appState';
 
 export function Sidebar() {
@@ -36,6 +37,14 @@ export function Sidebar() {
 
 
       <div>
+        <button
+          class="btn-glass"
+          onClick={createNewSession}
+          title="新しいチャットを開始"
+          style="width: 100%; justify-content: center; margin-bottom: 1rem; font-weight: 600;"
+        >
+          ➕ 新しいチャット
+        </button>
         <h3 class="sidebar-title">💬 会話履歴</h3>
         <div class="sidebar-sessions-list">
           <For each={sessions()}>

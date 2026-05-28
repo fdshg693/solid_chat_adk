@@ -1,5 +1,81 @@
 import { createSignal } from 'solid-js';
 
+export interface User {
+  id: string;
+  name: string;
+  role: 'admin' | 'user';
+  avatar: string;
+}
+
+const DEFAULT_USERS: User[] = [
+  { id: 'u-1', name: 'admin', role: 'admin', avatar: '👑' },
+  { id: 'u-2', name: 'user1', role: 'user', avatar: '👤' }
+];
+
+const getInitialUsers = (): User[] => {
+  const saved = localStorage.getItem('chat_users');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to parse users', e);
+    }
+  }
+  localStorage.setItem('chat_users', JSON.stringify(DEFAULT_USERS));
+  return DEFAULT_USERS;
+};
+
+const getInitialActiveUser = (initialUsers: User[]): User => {
+  const savedId = localStorage.getItem('active_user_id');
+  if (savedId) {
+    const found = initialUsers.find(u => u.id === savedId);
+    if (found) return found;
+  }
+  const fallback = initialUsers[0] || DEFAULT_USERS[0];
+  localStorage.setItem('active_user_id', fallback.id);
+  return fallback;
+};
+
+const initialUsers = getInitialUsers();
+const initialActiveUser = getInitialActiveUser(initialUsers);
+
+export const [users, setUsers] = createSignal<User[]>(initialUsers);
+export const [activeUser, setActiveUser] = createSignal<User>(initialActiveUser);
+
+export const switchUser = (id: string) => {
+  const found = users().find(u => u.id === id);
+  if (found) {
+    setActiveUser(found);
+    localStorage.setItem('active_user_id', id);
+  }
+};
+
+export const addUser = (name: string, role: 'admin' | 'user', avatar: string) => {
+  const newUser: User = {
+    id: `u-${Date.now()}`,
+    name,
+    role,
+    avatar
+  };
+  const updated = [...users(), newUser];
+  setUsers(updated);
+  localStorage.setItem('chat_users', JSON.stringify(updated));
+  return newUser;
+};
+
+export const deleteUser = (id: string) => {
+  if (id === activeUser().id) {
+    return false;
+  }
+  const updated = users().filter(u => u.id !== id);
+  setUsers(updated);
+  localStorage.setItem('chat_users', JSON.stringify(updated));
+  return true;
+};
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';

@@ -2,9 +2,9 @@ import { Show } from 'solid-js';
 import { 
   apiKey, 
   tavilyApiKey, 
-  createNewSession,
   currentTab,
-  setCurrentTab
+  setCurrentTab,
+  activeUser
 } from '../store/appState';
 
 export function Header() {
@@ -46,6 +46,17 @@ export function Header() {
       </div>
 
       <div class="action-buttons">
+        {/* Active User Badge */}
+        <div 
+          class="user-badge"
+          onClick={() => setCurrentTab('settings')}
+          title="ユーザー設定・切り替えへ"
+          style="margin-right: 0.25rem;"
+        >
+          <span>{activeUser().avatar}</span>
+          <span style="font-weight: 600;">{activeUser().name}</span>
+        </div>
+
         {/* API key status indicator badge */}
         <Show
           when={apiKey()}
@@ -56,14 +67,6 @@ export function Header() {
         <Show when={tavilyApiKey()}>
           <span class="api-key-badge saved">Tavily Active</span>
         </Show>
-        
-        <button
-          class="btn-glass"
-          onClick={createNewSession}
-          title="新しいチャットを開始"
-        >
-          ➕ 新しいチャット
-        </button>
       </div>
     </header>
   );
