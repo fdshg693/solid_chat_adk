@@ -10,26 +10,21 @@ import { CreateMemoForm } from './Memo/CreateMemoForm';
 import { MemoCard } from './Memo/MemoCard';
 
 export function MemoManager() {
-  // Debounced auto-save map
-  let saveTimeouts: Record<string, number> = {};
-
-  const saveToBackend = (memo: UserMemo) => {
-    if (saveTimeouts[memo.id]) clearTimeout(saveTimeouts[memo.id]);
-    saveTimeouts[memo.id] = window.setTimeout(() => {
-      authFetch(`/api/memos/${memo.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(memo)
-      }).catch(e => console.error(e));
-    }, 500);
-  };
-
-  const updateMemoField = (id: string, updates: Partial<UserMemo>) => {
+  const saveMemoEdits = async (id: string, updates: Partial<UserMemo>) => {
     const memo = userMemos().find(m => m.id === id);
     if (!memo) return;
     const updated = { ...memo, ...updates, updater: activePersona() ? activePersona().name : 'admin' };
     setUserMemos(userMemos().map(m => m.id === id ? updated : m));
-    saveToBackend(updated);
+
+    try {
+      await authFetch(`/api/memos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const deleteMemo = async (id: string) => {
@@ -69,17 +64,6 @@ export function MemoManager() {
     }
   };
 
-  // Helper to toggle audience in existing memo
-  const toggleExistingAudience = (id: string, name: string) => {
-    const memo = userMemos().find(m => m.id === id);
-    if (!memo) return;
-    const current = memo.targetAudiences || [];
-    const next = current.includes(name)
-      ? current.filter(x => x !== name)
-      : [...current, name];
-    updateMemoField(id, { targetAudiences: next });
-  };
-
   return (
     <div class="agent-manager-view">
       <div class="agent-manager-content" style="max-width: 900px;">
@@ -99,9 +83,8 @@ export function MemoManager() {
               {(memo) => (
                 <MemoCard
                   memo={memo()}
-                  onUpdate={updateMemoField}
+                  onSave={saveMemoEdits}
                   onDelete={deleteMemo}
-                  toggleAudience={toggleExistingAudience}
                 />
               )}
             </Index>
