@@ -11,15 +11,16 @@ export interface AgentRunOptions {
   sessionId: string;
   model: string;
   instruction: string;
+  owner: string;
   toolsOptions: GetToolsOptions;
 }
 
 export const runAgent = async (options: AgentRunOptions) => {
-  const { message, sessionId, model, instruction, toolsOptions } = options;
+  const { message, sessionId, model, instruction, owner, toolsOptions } = options;
 
-  console.log(`[Backend] Initializing LlmAgent with model: ${model}`);
+  console.log(`[Backend] Initializing LlmAgent with model: ${model} and owner: ${owner}`);
   
-  const tools = getAvailableTools(toolsOptions);
+  const tools = getAvailableTools({ ...toolsOptions, owner });
 
   const agent = new LlmAgent({
     name: 'SolidChatAgent',

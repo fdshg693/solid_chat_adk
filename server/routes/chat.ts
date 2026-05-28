@@ -30,11 +30,14 @@ chatApp.post('/', async (c) => {
       ? sessionId.trim()
       : 'default-session';
 
+    const owner = c.req.header('X-User-Identity') || 'admin';
+
     const { stream, sessId } = await runAgent({
       message,
       sessionId: activeSessionId,
       model: selectedModel,
       instruction: systemInstruction,
+      owner,
       toolsOptions: {
         tavilyApiKey
       }

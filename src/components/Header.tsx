@@ -4,7 +4,10 @@ import {
   tavilyApiKey, 
   currentTab,
   setCurrentTab,
-  activeUser
+  activeUser,
+  authUsername,
+  authAvatar,
+  logoutUser
 } from '../store/appState';
 
 export function Header() {
@@ -45,28 +48,51 @@ export function Header() {
         </button>
       </div>
 
-      <div class="action-buttons">
-        {/* Active User Badge */}
+      <div class="action-buttons" style="display: flex; gap: 0.5rem; align-items: center;">
+        {/* Authenticated Identity Badge */}
+        <div 
+          class="user-badge"
+          style="background: rgba(6,182,212,0.15); border-color: rgba(6,182,212,0.3); color: #22d3ee; margin: 0;"
+          title="ログイン中の認証ユーザー名 (Identity)"
+        >
+          <span>{authAvatar() || '👤'}</span>
+          <span style="font-weight: 700; color: #fff;">{authUsername()}</span>
+          <span style="font-size: 0.65rem; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px; margin-left: 0.35rem; font-weight: 900; letter-spacing: 0.5px;">ID</span>
+        </div>
+
+        {/* Active Persona Badge */}
         <div 
           class="user-badge"
           onClick={() => setCurrentTab('settings')}
-          title="ユーザー設定・切り替えへ"
-          style="margin-right: 0.25rem;"
+          title="アクティブペルソナ (Persona) 設定へ"
+          style="margin: 0; cursor: pointer;"
         >
           <span>{activeUser().avatar}</span>
           <span style="font-weight: 600;">{activeUser().name}</span>
+          <span style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px; margin-left: 0.35rem; font-weight: 900; color: var(--color-primary); letter-spacing: 0.5px;">PERSONA</span>
         </div>
 
         {/* API key status indicator badge */}
         <Show
           when={apiKey()}
-          fallback={<span class="api-key-badge missing">API Key Missing</span>}
+          fallback={<span class="api-key-badge missing" style="margin: 0;">API Key Missing</span>}
         >
-          <span class="api-key-badge saved">API Key Confirmed</span>
+          <span class="api-key-badge saved" style="margin: 0;">API Key Confirmed</span>
         </Show>
         <Show when={tavilyApiKey()}>
-          <span class="api-key-badge saved">Tavily Active</span>
+          <span class="api-key-badge saved" style="margin: 0;">Tavily Active</span>
         </Show>
+
+        {/* Logout Button */}
+        <button
+          type="button"
+          class="btn-glass"
+          onClick={() => { if (confirm('ログアウトしますか？')) logoutUser(); }}
+          style="color: var(--color-error); border-color: rgba(239,68,68,0.2); font-weight: 600; margin: 0; padding: 0.4rem 0.8rem; font-size: 0.82rem;"
+          title="ログアウトする"
+        >
+          🚪 Logout
+        </button>
       </div>
     </header>
   );

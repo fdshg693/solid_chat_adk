@@ -6,7 +6,8 @@ const memosApp = new Hono();
 
 memosApp.get('/', (c) => {
   try {
-    const memos = getAllMemos();
+    const owner = c.req.header('X-User-Identity') || 'admin';
+    const memos = getAllMemos(owner);
     return c.json(memos);
   } catch (error: any) {
     console.error('[Backend] Error fetching memos:', error);
@@ -16,6 +17,7 @@ memosApp.get('/', (c) => {
 
 memosApp.post('/', async (c) => {
   try {
+    const owner = c.req.header('X-User-Identity') || 'admin';
     const body = await c.req.json();
     if (!body.title) {
       return c.json({ error: 'Title is required' }, 400);
@@ -28,10 +30,11 @@ memosApp.post('/', async (c) => {
       content: body.content || '',
       creator: body.creator,
       updater: body.updater,
+      owner,
       targetAudiences: body.targetAudiences
     };
     
-    saveMemo(newMemo);
+    saveMemo(newMemo, owner);
     return c.json(newMemo, 201);
   } catch (error: any) {
     console.error('[Backend] Error creating memo:', error);
@@ -41,10 +44,11 @@ memosApp.post('/', async (c) => {
 
 memosApp.put('/:id', async (c) => {
   try {
+    const owner = c.req.header('X-User-Identity') || 'admin';
     const id = c.req.param('id');
     const body = await c.req.json();
     
-    const existing = getMemoById(id);
+    const existing = getMemoById(id, owner);
     if (!existing) {
       return c.json({ error: 'Memo not found' }, 404);
     }
@@ -55,10 +59,11 @@ memosApp.put('/:id', async (c) => {
       content: body.content !== undefined ? body.content : existing.content,
       creator: body.creator !== undefined ? body.creator : existing.creator,
       updater: body.updater !== undefined ? body.updater : existing.updater,
+      owner,
       targetAudiences: body.targetAudiences !== undefined ? body.targetAudiences : existing.targetAudiences
     };
     
-    saveMemo(updatedMemo);
+    saveMemo(updatedMemo, owner);
     return c.json(updatedMemo);
   } catch (error: any) {
     console.error('[Backend] Error updating memo:', error);
@@ -68,13 +73,14 @@ memosApp.put('/:id', async (c) => {
 
 memosApp.delete('/:id', (c) => {
   try {
+    const owner = c.req.header('X-User-Identity') || 'admin';
     const id = c.req.param('id');
-    const existing = getMemoById(id);
+    const existing = getMemoById(id, owner);
     if (!existing) {
       return c.json({ error: 'Memo not found' }, 404);
     }
     
-    deleteMemo(id);
+    deleteMemo(id, owner);
     return c.json({ success: true });
   } catch (error: any) {
     console.error('[Backend] Error deleting memo:', error);

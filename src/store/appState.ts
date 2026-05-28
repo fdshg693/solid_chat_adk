@@ -12,8 +12,20 @@ const DEFAULT_USERS: User[] = [
   { id: 'u-2', name: 'user1', role: 'user', avatar: '👤' }
 ];
 
+// Authentication signals
+export const [authUsername, setAuthUsername] = createSignal<string | null>(localStorage.getItem('auth_username'));
+export const [authRole, setAuthRole] = createSignal<string | null>(localStorage.getItem('auth_role'));
+export const [authAvatar, setAuthAvatar] = createSignal<string | null>(localStorage.getItem('auth_avatar'));
+
+// Helper to get namespace-isolated LocalStorage key
+export const getAuthKey = (key: string): string => {
+  const user = authUsername();
+  return user ? `${user}_${key}` : key;
+};
+
+// Initial Persona and Session loaders
 const getInitialUsers = (): User[] => {
-  const saved = localStorage.getItem('chat_users');
+  const saved = localStorage.getItem(getAuthKey('chat_users'));
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -24,18 +36,33 @@ const getInitialUsers = (): User[] => {
       console.error('Failed to parse users', e);
     }
   }
-  localStorage.setItem('chat_users', JSON.stringify(DEFAULT_USERS));
-  return DEFAULT_USERS;
+  const defaultPersonas: User[] = [];
+  const name = authUsername();
+  if (name) {
+    defaultPersonas.push({
+      id: 'u-1',
+      name,
+      role: (authRole() as 'admin' | 'user') || 'user',
+      avatar: authAvatar() || '👤'
+    });
+    if (authRole() === 'admin') {
+      defaultPersonas.push({ id: 'u-2', name: 'assistant', role: 'user', avatar: '🤖' });
+    }
+  } else {
+    defaultPersonas.push(...DEFAULT_USERS);
+  }
+  localStorage.setItem(getAuthKey('chat_users'), JSON.stringify(defaultPersonas));
+  return defaultPersonas;
 };
 
 const getInitialActiveUser = (initialUsers: User[]): User => {
-  const savedId = localStorage.getItem('active_user_id');
+  const savedId = localStorage.getItem(getAuthKey('active_user_id'));
   if (savedId) {
     const found = initialUsers.find(u => u.id === savedId);
     if (found) return found;
   }
   const fallback = initialUsers[0] || DEFAULT_USERS[0];
-  localStorage.setItem('active_user_id', fallback.id);
+  localStorage.setItem(getAuthKey('active_user_id'), fallback.id);
   return fallback;
 };
 
@@ -49,7 +76,7 @@ export const switchUser = (id: string) => {
   const found = users().find(u => u.id === id);
   if (found) {
     setActiveUser(found);
-    localStorage.setItem('active_user_id', id);
+    localStorage.setItem(getAuthKey('active_user_id'), id);
   }
 };
 
@@ -62,7 +89,7 @@ export const addUser = (name: string, role: 'admin' | 'user', avatar: string) =>
   };
   const updated = [...users(), newUser];
   setUsers(updated);
-  localStorage.setItem('chat_users', JSON.stringify(updated));
+  localStorage.setItem(getAuthKey('chat_users'), JSON.stringify(updated));
   return newUser;
 };
 
@@ -72,7 +99,7 @@ export const deleteUser = (id: string) => {
   }
   const updated = users().filter(u => u.id !== id);
   setUsers(updated);
-  localStorage.setItem('chat_users', JSON.stringify(updated));
+  localStorage.setItem(getAuthKey('chat_users'), JSON.stringify(updated));
   return true;
 };
 
@@ -89,16 +116,16 @@ export interface ChatSession {
   timestamp: number;
 }
 
-export const [apiKey, setApiKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
-export const [tempKey, setTempKey] = createSignal(localStorage.getItem('gemini_api_key') || '');
+export const [apiKey, setApiKey] = createSignal(localStorage.getItem(getAuthKey('gemini_api_key')) || '');
+export const [tempKey, setTempKey] = createSignal(localStorage.getItem(getAuthKey('gemini_api_key')) || '');
 
-export const [tavilyApiKey, setTavilyApiKey] = createSignal(localStorage.getItem('tavily_api_key') || '');
-export const [tempTavilyKey, setTempTavilyKey] = createSignal(localStorage.getItem('tavily_api_key') || '');
+export const [tavilyApiKey, setTavilyApiKey] = createSignal(localStorage.getItem(getAuthKey('tavily_api_key')) || '');
+export const [tempTavilyKey, setTempTavilyKey] = createSignal(localStorage.getItem(getAuthKey('tavily_api_key')) || '');
 
-export const [model, setModel] = createSignal(localStorage.getItem('gemini_model') || 'gemini-2.5-flash');
+export const [model, setModel] = createSignal(localStorage.getItem(getAuthKey('gemini_model')) || 'gemini-2.5-flash');
 
 export const [instruction, setInstruction] = createSignal(
-  localStorage.getItem('gemini_system_instruction') || 'You are a helpful and concise AI assistant. Address the user directly.'
+  localStorage.getItem(getAuthKey('gemini_system_instruction')) || 'You are a helpful and concise AI assistant. Address the user directly.'
 );
 
 export interface UserMemo {
@@ -120,42 +147,98 @@ export interface Agent {
 }
 
 export const [agents, setAgents] = createSignal<Agent[]>([]);
-export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem('active_agent_id') || '');
+export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem(getAuthKey('active_agent_id')) || '');
 export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents' | 'settings' | 'memos'>(
-  localStorage.getItem('gemini_api_key') ? 'chat' : 'settings'
+  localStorage.getItem(getAuthKey('gemini_api_key')) ? 'chat' : 'settings'
 );
 
-// Helper to fetch with retry to allow backend time to start up
-const fetchWithRetry = async (url: string, retries = 5, delay = 1000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      return await res.json();
-    } catch (e) {
-      if (i === retries - 1) throw e;
-      await new Promise(resolve => setTimeout(resolve, delay));
+// Fetchers with Auth headers
+export const fetchMemos = async () => {
+  const user = authUsername();
+  if (!user) return;
+  try {
+    const res = await fetch('/api/memos', {
+      headers: { 'X-User-Identity': user }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setUserMemos(data);
+      }
     }
+  } catch (e) {
+    console.error('Failed to fetch memos', e);
   }
 };
 
-// Fetch initial memos from backend with retry
-fetchWithRetry('/api/memos')
-  .then(data => {
-    if (Array.isArray(data)) {
-      setUserMemos(data);
+export const fetchAgents = async () => {
+  const user = authUsername();
+  if (!user) return;
+  try {
+    const res = await fetch('/api/agents', {
+      headers: { 'X-User-Identity': user }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAgents(data);
+      }
     }
-  })
-  .catch(e => console.error('Failed to fetch initial memos', e));
+  } catch (e) {
+    console.error('Failed to fetch agents', e);
+  }
+};
 
-// Fetch initial agents from backend with retry
-fetchWithRetry('/api/agents')
-  .then(data => {
-    if (Array.isArray(data)) {
-      setAgents(data);
+// Initialize State dynamically for a user session
+export const initializeStateForUser = () => {
+  const user = authUsername();
+  if (!user) return;
+
+  setApiKey(localStorage.getItem(getAuthKey('gemini_api_key')) || '');
+  setTempKey(localStorage.getItem(getAuthKey('gemini_api_key')) || '');
+
+  setTavilyApiKey(localStorage.getItem(getAuthKey('tavily_api_key')) || '');
+  setTempTavilyKey(localStorage.getItem(getAuthKey('tavily_api_key')) || '');
+
+  setModel(localStorage.getItem(getAuthKey('gemini_model')) || 'gemini-2.5-flash');
+  setInstruction(
+    localStorage.getItem(getAuthKey('gemini_system_instruction')) || 
+    'You are a helpful and concise AI assistant. Address the user directly.'
+  );
+
+  const loadedUsers = getInitialUsers();
+  setUsers(loadedUsers);
+  
+  const activeP = getInitialActiveUser(loadedUsers);
+  setActiveUser(activeP);
+
+  setSelectedAgentId(localStorage.getItem(getAuthKey('active_agent_id')) || '');
+
+  // Reset currentTab
+  setCurrentTab(localStorage.getItem(getAuthKey('gemini_api_key')) ? 'chat' : 'settings');
+
+  // Load chat sessions
+  const loadedSessions = getInitialSessions();
+  setSessions(loadedSessions);
+
+  const actSessId = getInitialSessionId(loadedSessions);
+  setSessionId(actSessId);
+
+  // Restore messages
+  const savedMessages = localStorage.getItem(getAuthKey(`chat_history_${actSessId}`));
+  if (savedMessages) {
+    try {
+      setMessages(JSON.parse(savedMessages));
+    } catch (e) {
+      setMessages([]);
     }
-  })
-  .catch(e => console.error('Failed to fetch initial agents', e));
+  } else {
+    setMessages([]);
+  }
+
+  fetchMemos();
+  fetchAgents();
+};
 
 export const [userInput, setUserInput] = createSignal('');
 export const [messages, setMessages] = createSignal<Message[]>([]);
@@ -164,7 +247,7 @@ export const [errorMessage, setErrorMessage] = createSignal('');
 
 // Session handling helpers
 export const getInitialSessions = (): ChatSession[] => {
-  const saved = localStorage.getItem('chat_sessions');
+  const saved = localStorage.getItem(getAuthKey('chat_sessions'));
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -177,18 +260,18 @@ export const getInitialSessions = (): ChatSession[] => {
   }
   const defaultSessionId = `session-${Date.now()}`;
   const defaultSessions = [{ id: defaultSessionId, title: '新しい会話', timestamp: Date.now() }];
-  localStorage.setItem('chat_sessions', JSON.stringify(defaultSessions));
-  localStorage.setItem('active_session_id', defaultSessionId);
+  localStorage.setItem(getAuthKey('chat_sessions'), JSON.stringify(defaultSessions));
+  localStorage.setItem(getAuthKey('active_session_id'), defaultSessionId);
   return defaultSessions;
 };
 
 export const getInitialSessionId = (initialSessions: ChatSession[]): string => {
-  const savedActive = localStorage.getItem('active_session_id');
+  const savedActive = localStorage.getItem(getAuthKey('active_session_id'));
   if (savedActive && initialSessions.some(s => s.id === savedActive)) {
     return savedActive;
   }
   const fallbackId = initialSessions[0].id;
-  localStorage.setItem('active_session_id', fallbackId);
+  localStorage.setItem(getAuthKey('active_session_id'), fallbackId);
   return fallbackId;
 };
 
@@ -219,15 +302,15 @@ export const saveConfiguration = (e: Event) => {
     return;
   }
   
-  localStorage.setItem('gemini_api_key', key);
-  localStorage.setItem('gemini_model', model());
-  localStorage.setItem('gemini_system_instruction', instruction());
+  localStorage.setItem(getAuthKey('gemini_api_key'), key);
+  localStorage.setItem(getAuthKey('gemini_model'), model());
+  localStorage.setItem(getAuthKey('gemini_system_instruction'), instruction());
   
   const tavilyKey = tempTavilyKey().trim();
   if (tavilyKey) {
-    localStorage.setItem('tavily_api_key', tavilyKey);
+    localStorage.setItem(getAuthKey('tavily_api_key'), tavilyKey);
   } else {
-    localStorage.removeItem('tavily_api_key');
+    localStorage.removeItem(getAuthKey('tavily_api_key'));
   }
   
   setApiKey(key);
@@ -238,14 +321,14 @@ export const saveConfiguration = (e: Event) => {
 
 // Action: Clear active key
 export const clearApiKey = () => {
-  localStorage.removeItem('gemini_api_key');
+  localStorage.removeItem(getAuthKey('gemini_api_key'));
   setApiKey('');
   setTempKey('');
   setCurrentTab('settings');
 };
 
 export const clearTavilyApiKey = () => {
-  localStorage.removeItem('tavily_api_key');
+  localStorage.removeItem(getAuthKey('tavily_api_key'));
   setTavilyApiKey('');
   setTempTavilyKey('');
 };
@@ -253,8 +336,8 @@ export const clearTavilyApiKey = () => {
 // Action: Select another chat session
 export const selectSession = (id: string) => {
   setSessionId(id);
-  localStorage.setItem('active_session_id', id);
-  const savedMessages = localStorage.getItem(`chat_history_${id}`);
+  localStorage.setItem(getAuthKey('active_session_id'), id);
+  const savedMessages = localStorage.getItem(getAuthKey(`chat_history_${id}`));
   if (savedMessages) {
     try {
       setMessages(JSON.parse(savedMessages));
@@ -279,18 +362,18 @@ export const createNewSession = () => {
   };
   const updatedSessions = [newSession, ...sessions()];
   setSessions(updatedSessions);
-  localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
+  localStorage.setItem(getAuthKey('chat_sessions'), JSON.stringify(updatedSessions));
   selectSession(newId);
 };
 
 // Action: Delete a session
 export const deleteSession = (id: string) => {
   if (confirm('この会話履歴を削除してもよろしいですか？')) {
-    localStorage.removeItem(`chat_history_${id}`);
+    localStorage.removeItem(getAuthKey(`chat_history_${id}`));
     
     const updatedSessions = sessions().filter(s => s.id !== id);
     setSessions(updatedSessions);
-    localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
+    localStorage.setItem(getAuthKey('chat_sessions'), JSON.stringify(updatedSessions));
 
     if (sessionId() === id) {
       if (updatedSessions.length > 0) {
@@ -339,10 +422,13 @@ export const sendMessage = async (e: Event) => {
       effectiveInstruction = activeAgent.systemPrompt;
     }
 
+    const user = authUsername() || '';
+
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-User-Identity': user
       },
       body: JSON.stringify({
         message: query,
@@ -377,7 +463,7 @@ export const sendMessage = async (e: Event) => {
     setMessages(finalMessages);
     
     // Save history
-    localStorage.setItem(`chat_history_${sessionId()}`, JSON.stringify(finalMessages));
+    localStorage.setItem(getAuthKey(`chat_history_${sessionId()}`), JSON.stringify(finalMessages));
 
     // Update session title if it is currently the default "新しい会話"
     const currentSession = sessions().find(s => s.id === sessionId());
@@ -390,7 +476,7 @@ export const sendMessage = async (e: Event) => {
         return s;
       });
       setSessions(updatedSessions);
-      localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
+      localStorage.setItem(getAuthKey('chat_sessions'), JSON.stringify(updatedSessions));
     }
     
   } catch (err: any) {
@@ -401,3 +487,75 @@ export const sendMessage = async (e: Event) => {
     scrollToBottom();
   }
 };
+
+// Authentication Actions
+export const loginUser = async (username: string, pw: string) => {
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: pw })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+    
+    // Set signals and storage
+    localStorage.setItem('auth_username', data.user.username);
+    localStorage.setItem('auth_role', data.user.role);
+    localStorage.setItem('auth_avatar', data.user.avatar);
+    setAuthUsername(data.user.username);
+    setAuthRole(data.user.role);
+    setAuthAvatar(data.user.avatar);
+
+    // Initialize user's local workspace
+    initializeStateForUser();
+    
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+};
+
+export const registerUser = async (username: string, pw: string, avatar: string = '👤') => {
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: pw, role: 'user', avatar })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Registration failed');
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+};
+
+export const logoutUser = () => {
+  localStorage.removeItem('auth_username');
+  localStorage.removeItem('auth_role');
+  localStorage.removeItem('auth_avatar');
+  setAuthUsername(null);
+  setAuthRole(null);
+  setAuthAvatar(null);
+  
+  // Clear frontend runtime state
+  setUsers(DEFAULT_USERS);
+  setActiveUser(DEFAULT_USERS[0]);
+  setSessions([]);
+  setSessionId('');
+  setMessages([]);
+  setUserMemos([]);
+  setAgents([]);
+  setApiKey('');
+  setTavilyApiKey('');
+};
+
+// Initialize if logged in on startup
+if (authUsername()) {
+  initializeStateForUser();
+}

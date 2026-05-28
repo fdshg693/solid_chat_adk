@@ -6,7 +6,8 @@ import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/Chat/MessageList';
 import { InputSection } from './components/Chat/InputSection';
 import { AgentSelector } from './components/Chat/AgentSelector';
-import { currentTab } from './store/appState';
+import { LoginScreen } from './components/LoginScreen';
+import { currentTab, authUsername } from './store/appState';
 import { Show } from 'solid-js';
 
 function App() {
@@ -16,38 +17,43 @@ function App() {
       <div class="bg-glow-purple"></div>
       <div class="bg-glow-cyan"></div>
 
-      {/* Header bar */}
-      <Header />
+      <Show
+        when={authUsername()}
+        fallback={<LoginScreen />}
+      >
+        {/* Header bar */}
+        <Header />
 
-      <Show when={currentTab() === 'agents'}>
-        <AgentManager />
-      </Show>
+        <Show when={currentTab() === 'agents'}>
+          <AgentManager />
+        </Show>
 
-      <Show when={currentTab() === 'memos'}>
-        <MemoManager />
-      </Show>
+        <Show when={currentTab() === 'memos'}>
+          <MemoManager />
+        </Show>
 
-      <Show when={currentTab() === 'settings'}>
-        <SettingsView />
-      </Show>
+        <Show when={currentTab() === 'settings'}>
+          <SettingsView />
+        </Show>
 
-      {/* Main workspace */}
-      <Show when={currentTab() === 'chat'}>
-        <div class="chat-workspace">
-          {/* Left Sidebar details */}
-          <Sidebar />
+        {/* Main workspace */}
+        <Show when={currentTab() === 'chat'}>
+          <div class="chat-workspace">
+            {/* Left Sidebar details */}
+            <Sidebar />
 
-          {/* Right chat view */}
-          <main class="chat-container">
-            <AgentSelector />
-            
-            {/* Scrollable messages area */}
-            <MessageList />
+            {/* Right chat view */}
+            <main class="chat-container">
+              <AgentSelector />
+              
+              {/* Scrollable messages area */}
+              <MessageList />
 
-            {/* Footer Input block */}
-            <InputSection />
-          </main>
-        </div>
+              {/* Footer Input block */}
+              <InputSection />
+            </main>
+          </div>
+        </Show>
       </Show>
     </div>
   );

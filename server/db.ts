@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
 
 // Resolve current directory for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -15,12 +16,19 @@ db.exec('PRAGMA foreign_keys = ON;');
 
 // Initialize tables
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    avatar TEXT
+  );
   CREATE TABLE IF NOT EXISTS memos (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     creator TEXT,
-    updater TEXT
+    updater TEXT,
+    owner TEXT
   );
   CREATE TABLE IF NOT EXISTS memo_audiences (
     memo_id TEXT NOT NULL,
@@ -32,14 +40,49 @@ db.exec(`
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     systemPrompt TEXT NOT NULL,
-    avatar TEXT
+    avatar TEXT,
+    owner TEXT
   );
 `);
 
 try { db.exec("ALTER TABLE memos ADD COLUMN creator TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE memos ADD COLUMN updater TEXT;"); } catch (e) {}
+try { db.exec("ALTER TABLE memos ADD COLUMN owner TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE agents ADD COLUMN avatar TEXT;"); } catch (e) {}
+try { db.exec("ALTER TABLE agents ADD COLUMN owner TEXT;"); } catch (e) {}
 
+// Check and seed default users
+try {
+  const checkStmt = db.prepare('SELECT COUNT(*) as count FROM users');
+  const result = checkStmt.get() as { count: number };
+  if (result.count === 0) {
+    console.log('[Backend DB] Seeding default users (admin, user1)...');
+    const insertStmt = db.prepare('INSERT INTO users (username, password, role, avatar) VALUES (?, ?, ?, ?)');
+    const hashPassword = (pw: string) => crypto.createHash('sha256').update(pw).digest('hex');
+    insertStmt.run('admin', hashPassword('admin'), 'admin', '👑');
+    insertStmt.run('user1', hashPassword('user1'), 'user', '👤');
+  }
+} catch (e) {
+  console.error('[Backend DB] Failed to seed users:', e);
+}
+
+
+export interface DBUser {
+  username: string;
+  password?: string;
+  role: string;
+  avatar?: string;
+}
+
+export const createUser = (user: DBUser): void => {
+  const stmt = db.prepare('INSERT INTO users (username, password, role, avatar) VALUES (?, ?, ?, ?)');
+  stmt.run(user.username, user.password || '', user.role, user.avatar || '👤');
+};
+
+export const getUserByName = (username: string): DBUser | undefined => {
+  const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+  return stmt.get(username) as unknown as DBUser | undefined;
+};
 
 export interface UserMemo {
   id: string;
@@ -47,6 +90,7 @@ export interface UserMemo {
   content: string;
   creator?: string;
   updater?: string;
+  owner?: string;
   targetAudiences?: string[];
 }
 
@@ -56,6 +100,7 @@ interface UserMemoRow {
   content: string;
   creator: string | null;
   updater: string | null;
+  owner: string | null;
 }
 
 const mapRowToMemo = (row: UserMemoRow): UserMemo => ({
@@ -64,6 +109,7 @@ const mapRowToMemo = (row: UserMemoRow): UserMemo => ({
   content: row.content,
   creator: row.creator || undefined,
   updater: row.updater || undefined,
+  owner: row.owner || undefined,
   targetAudiences: undefined
 });
 
@@ -73,9 +119,9 @@ const getAudiencesForMemo = (memoId: string): string[] => {
   return rows.map(r => r.username);
 };
 
-export const getAllMemos = (): UserMemo[] => {
-  const stmt = db.prepare('SELECT * FROM memos');
-  const rows = stmt.all() as unknown as UserMemoRow[];
+export const getAllMemos = (owner: string): UserMemo[] => {
+  const stmt = db.prepare('SELECT * FROM memos WHERE owner IS NULL OR owner = ?');
+  const rows = stmt.all(owner) as unknown as UserMemoRow[];
   return rows.map(row => {
     const memo = mapRowToMemo(row);
     memo.targetAudiences = getAudiencesForMemo(row.id);
@@ -83,33 +129,33 @@ export const getAllMemos = (): UserMemo[] => {
   });
 };
 
-export const getMemoById = (id: string): UserMemo | undefined => {
-  const stmt = db.prepare('SELECT * FROM memos WHERE id = ?');
-  const row = stmt.get(id) as unknown as UserMemoRow | undefined;
+export const getMemoById = (id: string, owner: string): UserMemo | undefined => {
+  const stmt = db.prepare('SELECT * FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  const row = stmt.get(id, owner) as unknown as UserMemoRow | undefined;
   if (!row) return undefined;
   const memo = mapRowToMemo(row);
   memo.targetAudiences = getAudiencesForMemo(row.id);
   return memo;
 };
 
-export const getMemoByTitle = (title: string): UserMemo | undefined => {
-  const stmt = db.prepare('SELECT * FROM memos WHERE title = ?');
-  const row = stmt.get(title) as unknown as UserMemoRow | undefined;
+export const getMemoByTitle = (title: string, owner: string): UserMemo | undefined => {
+  const stmt = db.prepare('SELECT * FROM memos WHERE title = ? AND (owner IS NULL OR owner = ?)');
+  const row = stmt.get(title, owner) as unknown as UserMemoRow | undefined;
   if (!row) return undefined;
   const memo = mapRowToMemo(row);
   memo.targetAudiences = getAudiencesForMemo(row.id);
   return memo;
 };
 
-export const saveMemo = (memo: UserMemo): void => {
-  const existing = getMemoById(memo.id);
+export const saveMemo = (memo: UserMemo, owner: string): void => {
+  const existing = getMemoById(memo.id, owner);
   
   if (existing) {
-    const stmt = db.prepare('UPDATE memos SET title = ?, content = ?, creator = ?, updater = ? WHERE id = ?');
-    stmt.run(memo.title, memo.content, memo.creator || null, memo.updater || null, memo.id);
+    const stmt = db.prepare('UPDATE memos SET title = ?, content = ?, creator = ?, updater = ?, owner = ? WHERE id = ?');
+    stmt.run(memo.title, memo.content, memo.creator || null, memo.updater || null, owner, memo.id);
   } else {
-    const stmt = db.prepare('INSERT INTO memos (id, title, content, creator, updater) VALUES (?, ?, ?, ?, ?)');
-    stmt.run(memo.id, memo.title, memo.content, memo.creator || null, memo.updater || null);
+    const stmt = db.prepare('INSERT INTO memos (id, title, content, creator, updater, owner) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(memo.id, memo.title, memo.content, memo.creator || null, memo.updater || null, owner);
   }
 
   // Save audiences
@@ -124,9 +170,9 @@ export const saveMemo = (memo: UserMemo): void => {
   }
 };
 
-export const deleteMemo = (id: string): void => {
-  const stmt = db.prepare('DELETE FROM memos WHERE id = ?');
-  stmt.run(id);
+export const deleteMemo = (id: string, owner: string): void => {
+  const stmt = db.prepare('DELETE FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  stmt.run(id, owner);
 };
 
 export interface Agent {
@@ -134,30 +180,31 @@ export interface Agent {
   name: string;
   systemPrompt: string;
   avatar?: string;
+  owner?: string;
 }
 
-export const getAllAgents = (): Agent[] => {
-  const stmt = db.prepare('SELECT * FROM agents');
-  return stmt.all() as unknown as Agent[];
+export const getAllAgents = (owner: string): Agent[] => {
+  const stmt = db.prepare('SELECT * FROM agents WHERE owner IS NULL OR owner = ?');
+  return stmt.all(owner) as unknown as Agent[];
 };
 
-export const getAgentById = (id: string): Agent | undefined => {
-  const stmt = db.prepare('SELECT * FROM agents WHERE id = ?');
-  return stmt.get(id) as unknown as Agent | undefined;
+export const getAgentById = (id: string, owner: string): Agent | undefined => {
+  const stmt = db.prepare('SELECT * FROM agents WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  return stmt.get(id, owner) as unknown as Agent | undefined;
 };
 
-export const saveAgent = (agent: Agent): void => {
-  const existing = getAgentById(agent.id);
+export const saveAgent = (agent: Agent, owner: string): void => {
+  const existing = getAgentById(agent.id, owner);
   if (existing) {
-    const stmt = db.prepare('UPDATE agents SET name = ?, systemPrompt = ?, avatar = ? WHERE id = ?');
-    stmt.run(agent.name, agent.systemPrompt, agent.avatar || '🤖', agent.id);
+    const stmt = db.prepare('UPDATE agents SET name = ?, systemPrompt = ?, avatar = ?, owner = ? WHERE id = ?');
+    stmt.run(agent.name, agent.systemPrompt, agent.avatar || '🤖', owner, agent.id);
   } else {
-    const stmt = db.prepare('INSERT INTO agents (id, name, systemPrompt, avatar) VALUES (?, ?, ?, ?)');
-    stmt.run(agent.id, agent.name, agent.systemPrompt, agent.avatar || '🤖');
+    const stmt = db.prepare('INSERT INTO agents (id, name, systemPrompt, avatar, owner) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(agent.id, agent.name, agent.systemPrompt, agent.avatar || '🤖', owner);
   }
 };
 
-export const deleteAgent = (id: string): void => {
-  const stmt = db.prepare('DELETE FROM agents WHERE id = ?');
-  stmt.run(id);
+export const deleteAgent = (id: string, owner: string): void => {
+  const stmt = db.prepare('DELETE FROM agents WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  stmt.run(id, owner);
 };
