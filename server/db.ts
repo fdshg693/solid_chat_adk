@@ -131,6 +131,31 @@ export const getAllMemos = (owner: string): UserMemo[] => {
   });
 };
 
+export const getMemosPaginated = (
+  owner: string,
+  page: number,
+  limit: number
+): { memos: UserMemo[]; total: number } => {
+  const offset = (page - 1) * limit;
+
+  // Get total matching memos
+  const countStmt = db.prepare('SELECT COUNT(*) as count FROM memos WHERE owner IS NULL OR owner = ?');
+  const totalResult = countStmt.get(owner) as { count: number };
+  const total = totalResult ? totalResult.count : 0;
+
+  // Get paginated memos ordered from newest to oldest
+  const stmt = db.prepare('SELECT * FROM memos WHERE owner IS NULL OR owner = ? ORDER BY id DESC LIMIT ? OFFSET ?');
+  const rows = stmt.all(owner, limit, offset) as unknown as UserMemoRow[];
+
+  const memos = rows.map(row => {
+    const memo = mapRowToMemo(row);
+    memo.targetAudiences = getAudiencesForMemo(row.id);
+    return memo;
+  });
+
+  return { memos, total };
+};
+
 export const getMemoById = (id: string, owner: string): UserMemo | undefined => {
   const stmt = db.prepare('SELECT * FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)');
   const row = stmt.get(id, owner) as unknown as UserMemoRow | undefined;

@@ -76,6 +76,14 @@
   ```sql
   SELECT * FROM memos WHERE owner IS NULL OR owner = ?
   ```
+  また、メモ一覧表示（UI用）の取得時は、表示パフォーマンス向上のため、サーバーサイドページングおよびIDの降順（新規作成順）での並び替えを行います。
+  ```sql
+  -- 件数取得用
+  SELECT COUNT(*) as count FROM memos WHERE owner IS NULL OR owner = ?
+  
+  -- ページング取得用（例：1ページ10件）
+  SELECT * FROM memos WHERE owner IS NULL OR owner = ? ORDER BY id DESC LIMIT ? OFFSET ?
+  ```
   ```sql
   SELECT * FROM agents WHERE owner IS NULL OR owner = ?
   ```

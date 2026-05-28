@@ -1,10 +1,13 @@
-import { Index } from 'solid-js';
+import { Index, For } from 'solid-js';
 import {
   userMemos,
-  setUserMemos,
   activePersona,
   type UserMemo,
   authFetch,
+  memoTotalCount,
+  memoCurrentPage,
+  memoPageSize,
+  fetchMemos,
 } from '../store/appState';
 import { CreateMemoForm } from './Memo/CreateMemoForm';
 import { MemoCard } from './Memo/MemoCard';
@@ -14,14 +17,16 @@ export function MemoManager() {
     const memo = userMemos().find(m => m.id === id);
     if (!memo) return;
     const updated = { ...memo, ...updates, updater: activePersona() ? activePersona().name : 'admin' };
-    setUserMemos(userMemos().map(m => m.id === id ? updated : m));
 
     try {
-      await authFetch(`/api/memos/${id}`, {
+      const res = await authFetch(`/api/memos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated)
       });
+      if (res.ok) {
+        await fetchMemos(memoCurrentPage());
+      }
     } catch (e) {
       console.error(e);
     }
@@ -29,10 +34,14 @@ export function MemoManager() {
 
   const deleteMemo = async (id: string) => {
     if (!confirm('このメモを削除してもよろしいですか？')) return;
-    const updated = userMemos().filter(m => m.id !== id);
-    setUserMemos(updated);
     try {
-      await authFetch(`/api/memos/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/memos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        const newTotal = memoTotalCount() - 1;
+        const maxPages = Math.max(1, Math.ceil(newTotal / memoPageSize));
+        const targetPage = memoCurrentPage() > maxPages ? maxPages : memoCurrentPage();
+        await fetchMemos(targetPage);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -49,20 +58,22 @@ export function MemoManager() {
       id: `memo-${Date.now()}`,
       ...memoData
     };
-    
-    // Add to state
-    setUserMemos([...userMemos(), newMemo]);
 
     try {
-      await authFetch('/api/memos', {
+      const res = await authFetch('/api/memos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMemo)
       });
+      if (res.ok) {
+        await fetchMemos(1);
+      }
     } catch (e) {
       console.error(e);
     }
   };
+
+  const totalPages = () => Math.max(1, Math.ceil(memoTotalCount() / memoPageSize));
 
   return (
     <div class="agent-manager-view">
@@ -95,6 +106,41 @@ export function MemoManager() {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages() > 1 && (
+            <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.05); animation: fadeIn 0.2s ease;">
+              <button
+                class="btn-glass"
+                disabled={memoCurrentPage() === 1}
+                onClick={() => fetchMemos(memoCurrentPage() - 1)}
+                style={`padding: 0.4rem 0.8rem; font-size: 0.85rem; opacity: ${memoCurrentPage() === 1 ? 0.4 : 1}; cursor: ${memoCurrentPage() === 1 ? 'not-allowed' : 'pointer'};`}
+              >
+                ◀ Prev
+              </button>
+              
+              <For each={Array.from({ length: totalPages() }, (_, i) => i + 1)}>
+                {(p) => (
+                  <button
+                    class={`btn-glass ${memoCurrentPage() === p ? 'active' : ''}`}
+                    onClick={() => fetchMemos(p)}
+                    style="padding: 0.4rem 0.8rem; font-size: 0.85rem; min-width: 34px; justify-content: center;"
+                  >
+                    {p}
+                  </button>
+                )}
+              </For>
+
+              <button
+                class="btn-glass"
+                disabled={memoCurrentPage() === totalPages()}
+                onClick={() => fetchMemos(memoCurrentPage() + 1)}
+                style={`padding: 0.4rem 0.8rem; font-size: 0.85rem; opacity: ${memoCurrentPage() === totalPages() ? 0.4 : 1}; cursor: ${memoCurrentPage() === totalPages() ? 'not-allowed' : 'pointer'};`}
+              >
+                Next ▶
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

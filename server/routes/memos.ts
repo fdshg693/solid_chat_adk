@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
-import { getAllMemos, saveMemo, deleteMemo, getMemoById, jwtSecret } from '../db';
+import { getMemosPaginated, saveMemo, deleteMemo, getMemoById, jwtSecret } from '../db';
 import crypto from 'node:crypto';
 
 const memosApp = new Hono();
@@ -11,8 +11,12 @@ memosApp.get('/', (c) => {
   try {
     const payload = c.get('jwtPayload') as any;
     const owner = payload.username;
-    const memos = getAllMemos(owner);
-    return c.json(memos);
+    
+    const page = parseInt(c.req.query('page') || '1', 10);
+    const limit = parseInt(c.req.query('limit') || '10', 10);
+    
+    const result = getMemosPaginated(owner, page, limit);
+    return c.json(result);
   } catch (error: any) {
     console.error('[Backend] Error fetching memos:', error);
     return c.json({ error: 'Failed to fetch memos' }, 500);

@@ -170,6 +170,9 @@ export interface UserMemo {
 }
 
 export const [userMemos, setUserMemos] = createSignal<UserMemo[]>([]);
+export const [memoTotalCount, setMemoTotalCount] = createSignal<number>(0);
+export const [memoCurrentPage, setMemoCurrentPage] = createSignal<number>(1);
+export const memoPageSize = 10;
 
 export interface Agent {
   id: string;
@@ -185,15 +188,17 @@ export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents' | 'set
 );
 
 // Fetchers with Auth headers
-export const fetchMemos = async () => {
+export const fetchMemos = async (page: number = 1) => {
   const user = authUsername();
   if (!user) return;
   try {
-    const res = await authFetch('/api/memos');
+    const res = await authFetch(`/api/memos?page=${page}&limit=${memoPageSize}`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setUserMemos(data);
+      if (data && Array.isArray(data.memos)) {
+        setUserMemos(data.memos);
+        setMemoTotalCount(data.total || 0);
+        setMemoCurrentPage(page);
       }
     }
   } catch (e) {
