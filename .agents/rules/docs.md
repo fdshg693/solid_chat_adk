@@ -32,10 +32,27 @@ description: Rules for using and updating documentation under the docs/ folder.
   - システム全体が提供する主要な機能要件を確認したいとき。
   - UIコンポーネント（Sidebar, AgentManager, SettingsDrawerなど）の振る舞いや仕様を理解・変更したいとき。
 
-### ③ データ保存設計書
+### ③ データ保存設計書 (Overview & Map)
 - **ファイルパス**: [data_storage.md](file:///c:/CodeRoot/solid_chat_adk/docs/system/data_storage.md)
-- **概要**: アプリケーションのデータがフロントエンド（LocalStorage）、バックエンド（SQLite、InMemory）のどこに、どのようなスキーマやライフサイクルで保存されるかを詳細に定義した設計書です。
+- **概要**: アプリケーションのデータ構造全体の保存マップおよび設計思想をまとめた最上位の設計書です。
 - **いつ見るべきか**:
-  - 新しいデータ項目を追加したり、既存のデータ構造を変更したいとき。
-  - LocalStorageのキーや、SQLiteのテーブル定義（`memos` / `agents`）を変更・追加するとき。
-  - セッション管理や永続化の仕組みをデバッグするとき。
+  - 各種データの保存先（フロントエンド/バックエンド/メモリ）の全体設計を確認したいとき。
+
+### ④ フロントエンド LocalStorage 仕様
+- **ファイルパス**: [local_storage.md](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md)
+- **概要**: フロントエンド（SolidJS）側で管理する API キー、ユーザー設定、表示用ペルソナ、およびセッションメッセージ履歴などのキー一覧と JSON スキーマ定義です。
+- **いつ見るべきか**:
+  - LocalStorage のキーを追加・変更したり、ペルソナやメッセージ履歴のデータ構造を確認・変更したいとき。
+
+### ⑤ バックエンド SQLite データベース仕様
+- **ファイルパス**: [sqlite_database.md](file:///c:/CodeRoot/solid_chat_adk/docs/system/sqlite_database.md)
+- **概要**: バックエンド（Hono）側の SQLite データベース（`app.db`）の各テーブル定義（`users`, `memos`, `memo_audiences`, `agents`）、マイグレーション、およびマルチユーザーデータ分離フィルタリングの仕様です。
+- **いつ見るべきか**:
+  - DBテーブルの定義変更、新規テーブルの作成、あるいは認証ユーザーごとの所有データ隔離ロジックを更新・確認したいとき。
+
+### ⑥ バックエンド In-Memory 保存仕様
+- **ファイルパス**: [in_memory_storage.md](file:///c:/CodeRoot/solid_chat_adk/docs/system/in_memory_storage.md)
+- **概要**: Google Agent Development Kit (`@google/adk`) を用いたリアルタイムなセッション状態、ランナー記憶、およびアーティファクトの追跡仕様と、サーバー再起動時のセッション自己修復メカニズムを解説しています。
+- **いつ見るべきか**:
+  - バックエンドでのセッション管理やコンテキスト追跡、一時記憶のライフサイクルのデバッグや仕様を確認したいとき。
+
