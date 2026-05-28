@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { Index } from 'solid-js';
 import {
   userMemos,
   setUserMemos,
@@ -93,16 +93,16 @@ export function MemoManager() {
           <h3 style="color: var(--text-primary); margin-bottom: 1.2rem; font-family: var(--font-family-display); font-size: 1.4rem;">Existing Memos</h3>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem;">
-            <For each={userMemos()}>
+            <Index each={userMemos()}>
               {(memo) => (
                 <MemoCard
-                  memo={memo}
+                  memo={memo()}
                   onUpdate={updateMemoField}
                   onDelete={deleteMemo}
                   toggleAudience={toggleExistingAudience}
                 />
               )}
-            </For>
+            </Index>
 
             {userMemos().length === 0 && (
               <div style="color: var(--text-muted); font-size: 0.95rem; text-align: center; grid-column: 1 / -1; padding: 2rem;">
