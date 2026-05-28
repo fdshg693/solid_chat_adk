@@ -6,19 +6,27 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.resolve(__dirname, '../memos.db');
+const dbPath = path.resolve(__dirname, '../app.db');
 
 export const db = new DatabaseSync(dbPath);
 
-// Initialize table
+// Enable foreign key support
+db.exec('PRAGMA foreign_keys = ON;');
+
+// Initialize tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS memos (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     creator TEXT,
-    updater TEXT,
-    targetAudiences TEXT
+    updater TEXT
+  );
+  CREATE TABLE IF NOT EXISTS memo_audiences (
+    memo_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    PRIMARY KEY (memo_id, username),
+    FOREIGN KEY (memo_id) REFERENCES memos(id) ON DELETE CASCADE
   );
   CREATE TABLE IF NOT EXISTS agents (
     id TEXT PRIMARY KEY,
@@ -30,7 +38,6 @@ db.exec(`
 
 try { db.exec("ALTER TABLE memos ADD COLUMN creator TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE memos ADD COLUMN updater TEXT;"); } catch (e) {}
-try { db.exec("ALTER TABLE memos ADD COLUMN targetAudiences TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE agents ADD COLUMN avatar TEXT;"); } catch (e) {}
 
 
@@ -49,7 +56,6 @@ interface UserMemoRow {
   content: string;
   creator: string | null;
   updater: string | null;
-  targetAudiences: string | null;
 }
 
 const mapRowToMemo = (row: UserMemoRow): UserMemo => ({
@@ -58,36 +64,63 @@ const mapRowToMemo = (row: UserMemoRow): UserMemo => ({
   content: row.content,
   creator: row.creator || undefined,
   updater: row.updater || undefined,
-  targetAudiences: row.targetAudiences ? JSON.parse(row.targetAudiences) : undefined
+  targetAudiences: undefined
 });
+
+const getAudiencesForMemo = (memoId: string): string[] => {
+  const stmt = db.prepare('SELECT username FROM memo_audiences WHERE memo_id = ?');
+  const rows = stmt.all(memoId) as { username: string }[];
+  return rows.map(r => r.username);
+};
 
 export const getAllMemos = (): UserMemo[] => {
   const stmt = db.prepare('SELECT * FROM memos');
   const rows = stmt.all() as unknown as UserMemoRow[];
-  return rows.map(mapRowToMemo);
+  return rows.map(row => {
+    const memo = mapRowToMemo(row);
+    memo.targetAudiences = getAudiencesForMemo(row.id);
+    return memo;
+  });
 };
 
 export const getMemoById = (id: string): UserMemo | undefined => {
   const stmt = db.prepare('SELECT * FROM memos WHERE id = ?');
   const row = stmt.get(id) as unknown as UserMemoRow | undefined;
-  return row ? mapRowToMemo(row) : undefined;
+  if (!row) return undefined;
+  const memo = mapRowToMemo(row);
+  memo.targetAudiences = getAudiencesForMemo(row.id);
+  return memo;
 };
 
 export const getMemoByTitle = (title: string): UserMemo | undefined => {
   const stmt = db.prepare('SELECT * FROM memos WHERE title = ?');
   const row = stmt.get(title) as unknown as UserMemoRow | undefined;
-  return row ? mapRowToMemo(row) : undefined;
+  if (!row) return undefined;
+  const memo = mapRowToMemo(row);
+  memo.targetAudiences = getAudiencesForMemo(row.id);
+  return memo;
 };
 
 export const saveMemo = (memo: UserMemo): void => {
   const existing = getMemoById(memo.id);
-  const targetAudiencesStr = memo.targetAudiences ? JSON.stringify(memo.targetAudiences) : null;
+  
   if (existing) {
-    const stmt = db.prepare('UPDATE memos SET title = ?, content = ?, creator = ?, updater = ?, targetAudiences = ? WHERE id = ?');
-    stmt.run(memo.title, memo.content, memo.creator || null, memo.updater || null, targetAudiencesStr, memo.id);
+    const stmt = db.prepare('UPDATE memos SET title = ?, content = ?, creator = ?, updater = ? WHERE id = ?');
+    stmt.run(memo.title, memo.content, memo.creator || null, memo.updater || null, memo.id);
   } else {
-    const stmt = db.prepare('INSERT INTO memos (id, title, content, creator, updater, targetAudiences) VALUES (?, ?, ?, ?, ?, ?)');
-    stmt.run(memo.id, memo.title, memo.content, memo.creator || null, memo.updater || null, targetAudiencesStr);
+    const stmt = db.prepare('INSERT INTO memos (id, title, content, creator, updater) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(memo.id, memo.title, memo.content, memo.creator || null, memo.updater || null);
+  }
+
+  // Save audiences
+  const deleteStmt = db.prepare('DELETE FROM memo_audiences WHERE memo_id = ?');
+  deleteStmt.run(memo.id);
+
+  if (memo.targetAudiences && memo.targetAudiences.length > 0) {
+    const insertStmt = db.prepare('INSERT INTO memo_audiences (memo_id, username) VALUES (?, ?)');
+    for (const username of memo.targetAudiences) {
+      insertStmt.run(memo.id, username);
+    }
   }
 };
 
