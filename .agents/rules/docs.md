@@ -56,3 +56,23 @@ description: Rules for using and updating documentation under the docs/ folder.
 - **いつ見るべきか**:
   - バックエンドでのセッション管理やコンテキスト追跡、一時記憶のライフサイクルのデバッグや仕様を確認したいとき。
 
+### ⑦ ユーザーシステム全体像
+- **ファイルパス**: [User_Management_Overview.md](file:///c:/CodeRoot/solid_chat_adk/docs/app/User_Management_Overview.md)
+- **概要**: 認証ユーザー（Identity）と表示用ペルソナ（Persona）という二重構造を持つユーザーシステム全体の概要や概念マップを提供しています。
+- **いつ見るべきか**:
+  - ユーザー機能の全体構造、認証と表示ペルソナの役割の違いについて把握したいとき。
+
+### ⑧ 認証ユーザー機能仕様
+- **ファイルパス**: [User_Identity_Details.md](file:///c:/CodeRoot/solid_chat_adk/docs/app/User_Identity_Details.md)
+- **概要**: 認証ユーザー（Identity）の登録・ログイン・データ分離（SQLite, LocalStorage プレフィックス）およびセキュリティ隔離境界の詳細な動作仕様と制限について説明しています。
+- **いつ見るべきか**:
+  - ログイン/新規登録のフローやセキュリティ隔離境界、DBの owner スコープなどの動作を確認・編集したいとき。
+
+### ⑨ 表示用ペルソナ機能仕様
+- **ファイルパス**: [User_Persona_Details.md](file:///c:/CodeRoot/solid_chat_adk/docs/app/User_Persona_Details.md)
+- **概要**: ペルソナ（Persona）の切り替え・管理操作、アバター絵文字の描画、およびメモ（作成者・更新者・対象オーディエンス）との連携について詳細を説明しています。
+- **いつ見るべきか**:
+  - 表示ペルソナの追加/削除ルール、一般/管理者権限による管理制限、およびメモの適用範囲などの挙動を確認・編集したいとき。
+
+
+

@@ -22,3 +22,13 @@
 - **APIキーのローカル管理**: Gemini APIキーやTavily APIキーをブラウザのローカルストレージに安全に保存・管理。
 - **モデル選択**: 用途に応じて使用するAIモデル（gemini-2.5-flash, gemini-2.5-proなど）を切り替える機能。
 - **グローバル指示の変更**: デフォルトエージェントの振る舞いを決定するシステムプロンプトのカスタマイズ。
+
+## 5. ユーザー管理と認証機能 (User System)
+- **認証ユーザー (Identity) による安全な分離**: ログイン画面での認証およびサインアップ機能。ログイン情報に基づき、SQLite DB 上のデータ（メモ・カスタムエージェント）およびブラウザの `LocalStorage` 領域が各ユーザー間で完全に分離されます。
+- **マルチペルソナ (Persona) 切り替え**: チャットの表示役割やメモの編集者として利用可能な「ペルソナ」の切り替え・管理機能。管理者権限を持つユーザーはペルソナの新規作成や削除が可能です。
+- **詳細ドキュメント**:
+  - 全体像・概念の紹介: [ユーザーシステム全体像 (User_Management_Overview.md)](file:///c:/CodeRoot/solid_chat_adk/docs/app/User_Management_Overview.md)
+  - 認証ユーザー機能仕様: [認証ユーザー機能仕様 (User_Identity_Details.md)](file:///c:/CodeRoot/solid_chat_adk/docs/app/User_Identity_Details.md)
+  - 表示用ペルソナ機能仕様: [表示用ペルソナ機能仕様 (User_Persona_Details.md)](file:///c:/CodeRoot/solid_chat_adk/docs/app/User_Persona_Details.md)
+
+
