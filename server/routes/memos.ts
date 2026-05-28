@@ -1,12 +1,16 @@
 import { Hono } from 'hono';
-import { getAllMemos, saveMemo, deleteMemo, getMemoById } from '../db';
+import { jwt } from 'hono/jwt';
+import { getAllMemos, saveMemo, deleteMemo, getMemoById, jwtSecret } from '../db';
 import crypto from 'node:crypto';
 
 const memosApp = new Hono();
 
+memosApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
+
 memosApp.get('/', (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const memos = getAllMemos(owner);
     return c.json(memos);
   } catch (error: any) {
@@ -17,7 +21,8 @@ memosApp.get('/', (c) => {
 
 memosApp.post('/', async (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const body = await c.req.json();
     if (!body.title) {
       return c.json({ error: 'Title is required' }, 400);
@@ -44,7 +49,8 @@ memosApp.post('/', async (c) => {
 
 memosApp.put('/:id', async (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const id = c.req.param('id');
     const body = await c.req.json();
     
@@ -73,7 +79,8 @@ memosApp.put('/:id', async (c) => {
 
 memosApp.delete('/:id', (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const id = c.req.param('id');
     const existing = getMemoById(id, owner);
     if (!existing) {

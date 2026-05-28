@@ -4,6 +4,7 @@ import {
   setUserMemos,
   activePersona,
   type UserMemo,
+  authFetch,
 } from '../store/appState';
 import { CreateMemoForm } from './Memo/CreateMemoForm';
 import { MemoCard } from './Memo/MemoCard';
@@ -15,7 +16,7 @@ export function MemoManager() {
   const saveToBackend = (memo: UserMemo) => {
     if (saveTimeouts[memo.id]) clearTimeout(saveTimeouts[memo.id]);
     saveTimeouts[memo.id] = window.setTimeout(() => {
-      fetch(`/api/memos/${memo.id}`, {
+      authFetch(`/api/memos/${memo.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(memo)
@@ -36,7 +37,7 @@ export function MemoManager() {
     const updated = userMemos().filter(m => m.id !== id);
     setUserMemos(updated);
     try {
-      await fetch(`/api/memos/${id}`, { method: 'DELETE' });
+      await authFetch(`/api/memos/${id}`, { method: 'DELETE' });
     } catch (e) {
       console.error(e);
     }
@@ -58,7 +59,7 @@ export function MemoManager() {
     setUserMemos([...userMemos(), newMemo]);
 
     try {
-      await fetch('/api/memos', {
+      await authFetch('/api/memos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMemo)

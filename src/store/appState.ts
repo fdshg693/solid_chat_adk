@@ -23,6 +23,16 @@ export const getAuthKey = (key: string): string => {
   return user ? `${user}_${key}` : key;
 };
 
+// Cryptographically secure fetch wrapper adding Authorization header with JWT
+export const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const token = localStorage.getItem('auth_token');
+  const headers = {
+    ...options.headers,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+  return fetch(url, { ...options, headers });
+};
+
 // Initial Persona and Session loaders
 const getInitialPersonas = (): Persona[] => {
   let saved = localStorage.getItem(getAuthKey('chat_personas'));
@@ -179,9 +189,7 @@ export const fetchMemos = async () => {
   const user = authUsername();
   if (!user) return;
   try {
-    const res = await fetch('/api/memos', {
-      headers: { 'X-User-Identity': user }
-    });
+    const res = await authFetch('/api/memos');
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -197,9 +205,7 @@ export const fetchAgents = async () => {
   const user = authUsername();
   if (!user) return;
   try {
-    const res = await fetch('/api/agents', {
-      headers: { 'X-User-Identity': user }
-    });
+    const res = await authFetch('/api/agents');
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -444,13 +450,10 @@ export const sendMessage = async (e: Event) => {
       effectiveInstruction = activeAgent.systemPrompt;
     }
 
-    const user = authUsername() || '';
-
-    const response = await fetch('/api/chat', {
+    const response = await authFetch('/api/chat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-Identity': user
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         message: query,
@@ -524,6 +527,7 @@ export const loginUser = async (username: string, pw: string) => {
     }
     
     // Set signals and storage
+    localStorage.setItem('auth_token', data.token);
     localStorage.setItem('auth_username', data.user.username);
     localStorage.setItem('auth_role', data.user.role);
     localStorage.setItem('auth_avatar', data.user.avatar);
@@ -558,6 +562,7 @@ export const registerUser = async (username: string, pw: string, avatar: string 
 };
 
 export const logoutUser = () => {
+  localStorage.removeItem('auth_token');
   localStorage.removeItem('auth_username');
   localStorage.removeItem('auth_role');
   localStorage.removeItem('auth_avatar');

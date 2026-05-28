@@ -1,5 +1,5 @@
 import { For, createSignal } from 'solid-js';
-import { agents, setAgents, type Agent } from '../store/appState';
+import { agents, setAgents, type Agent, authFetch } from '../store/appState';
 
 export function AgentManager() {
   const [editingId, setEditingId] = createSignal<string | null>(null);
@@ -32,7 +32,7 @@ export function AgentManager() {
     if (!id || !editName().trim() || !editPrompt().trim()) return;
 
     try {
-      const response = await fetch(`/api/agents/${id}`, {
+      const response = await authFetch(`/api/agents/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editName().trim(), systemPrompt: editPrompt().trim(), avatar: editAvatar() })
@@ -50,7 +50,7 @@ export function AgentManager() {
   const deleteAgent = async (id: string) => {
     if (!confirm('このエージェントを削除してもよろしいですか？')) return;
     try {
-      await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+      await authFetch(`/api/agents/${id}`, { method: 'DELETE' });
       setAgents(agents().filter(a => a.id !== id));
     } catch (e) {
       console.error('Failed to delete agent', e);
@@ -61,7 +61,7 @@ export function AgentManager() {
     if (!newName().trim() || !newPrompt().trim()) return;
     const id = `agent-${Date.now()}`;
     try {
-      const response = await fetch('/api/agents', {
+      const response = await authFetch('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, name: newName().trim(), systemPrompt: newPrompt().trim(), avatar: newAvatar() })

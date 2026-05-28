@@ -11,6 +11,8 @@ const dbPath = path.resolve(__dirname, '../app.db');
 
 export const db = new DatabaseSync(dbPath);
 
+export const jwtSecret = process.env.JWT_SECRET || 'ultraviolet-super-secure-key-2026';
+
 // Enable foreign key support
 db.exec('PRAGMA foreign_keys = ON;');
 

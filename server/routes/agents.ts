@@ -1,11 +1,15 @@
 import { Hono } from 'hono';
-import { getAllAgents, getAgentById, saveAgent, deleteAgent, type Agent } from '../db';
+import { jwt } from 'hono/jwt';
+import { getAllAgents, getAgentById, saveAgent, deleteAgent, jwtSecret, type Agent } from '../db';
 
 const agentsApp = new Hono();
 
+agentsApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
+
 agentsApp.get('/', (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const agents = getAllAgents(owner);
     return c.json(agents);
   } catch (error: any) {
@@ -16,7 +20,8 @@ agentsApp.get('/', (c) => {
 
 agentsApp.post('/', async (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const body = await c.req.json();
     const { id, name, systemPrompt, avatar } = body;
     
@@ -35,7 +40,8 @@ agentsApp.post('/', async (c) => {
 
 agentsApp.put('/:id', async (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const id = c.req.param('id');
     const body = await c.req.json();
     const { name, systemPrompt, avatar } = body;
@@ -63,7 +69,8 @@ agentsApp.put('/:id', async (c) => {
 
 agentsApp.delete('/:id', (c) => {
   try {
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
     const id = c.req.param('id');
     deleteAgent(id, owner);
     return c.json({ success: true });

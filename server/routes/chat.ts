@@ -1,7 +1,11 @@
 import { Hono } from 'hono';
+import { jwt } from 'hono/jwt';
 import { runAgent } from '../agent';
+import { jwtSecret } from '../db';
 
 const chatApp = new Hono();
+
+chatApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
 
 chatApp.post('/', async (c) => {
   const body = await c.req.json().catch(() => ({}));
@@ -30,7 +34,8 @@ chatApp.post('/', async (c) => {
       ? sessionId.trim()
       : 'default-session';
 
-    const owner = c.req.header('X-User-Identity') || 'admin';
+    const payload = c.get('jwtPayload') as any;
+    const owner = payload.username;
 
     const { stream, sessId } = await runAgent({
       message,

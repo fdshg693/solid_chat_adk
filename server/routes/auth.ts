@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
+import { sign } from 'hono/jwt';
 import crypto from 'node:crypto';
-import { createUser, getUserByName, type DBUser } from '../db';
+import { createUser, getUserByName, jwtSecret, type DBUser } from '../db';
 
 const authApp = new Hono();
 
@@ -74,8 +75,19 @@ authApp.post('/login', async (c) => {
       return c.json({ error: 'ユーザー名またはパスワードが正しくありません。' }, 401);
     }
 
+    const token = await sign(
+      {
+        username: user.username,
+        role: user.role,
+        avatar: user.avatar,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
+      },
+      jwtSecret
+    );
+
     return c.json({
       success: true,
+      token,
       user: {
         username: user.username,
         role: user.role,

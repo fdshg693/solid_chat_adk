@@ -16,6 +16,7 @@
 | **Tavily API キー** | LocalStorage | 同上（検索ツール用）。 | [LocalStorage 仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md) |
 | **Gemini モデル名** | LocalStorage | 設定画面で選択されたモデル情報を保持。 | [LocalStorage 仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md) |
 | **システム指示 (System Instruction)** | LocalStorage | デフォルトで適用されるシステムプロンプト。 | [LocalStorage 仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md) |
+| **JWTトークン (Token)** | LocalStorage | ログイン完了時にサーバーから返却される署名済み認証トークン。保護されたAPIへのアクセスで使用。 | [LocalStorage 仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md) |
 | **会話履歴・セッション一覧** | LocalStorage | ユーザーごとの会話セッションとメッセージ履歴。ユーザー名プレフィックスで暗黙的に隔離。 | [LocalStorage 仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md) |
 | **認証ユーザー情報 (Identity)** | SQLite | ログイン用のユーザーID（`username`）、ハッシュ化されたパスワード、システム権限、アバター。 | [SQLite データベース仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/sqlite_database.md) |
 | **共有/個人メモ (Memos)** | SQLite | ユーザーが作成したメモのタイトル、内容、作成者・更新者ペルソナ、所有者。 | [SQLite データベース仕様](file:///c:/CodeRoot/solid_chat_adk/docs/system/sqlite_database.md) |
@@ -30,7 +31,7 @@
 各データ保存レイヤーは、セキュリティ、永続性、およびアクセス速度のバランスを考慮して役割が分担されています。詳細はそれぞれの設計ドキュメントを参照してください。
 
 ### ① [フロントエンド LocalStorage (Client-side)](file:///c:/CodeRoot/solid_chat_adk/docs/system/local_storage.md)
-* **主な役割**: 個人設定、認証APIキー、チャットメッセージ履歴、アクティブペルソナの管理。
+* **主な役割**: 個人設定、認証APIキー、暗号署名済みJWT（`auth_token`）、チャットメッセージ履歴、アクティブペルソナの管理。
 * **設計ポイント**:
   - `auth_username` をプレフィックス（`${authUsername}_`）とした名前空間を動的に付与し、同じブラウザを使用する異なる認証ユーザー間でのデータを完全分離。
   - 機密情報である API キーがバックエンドデータベースへ永続化されるのを排除し、個々のブラウザ内で安全に完結。

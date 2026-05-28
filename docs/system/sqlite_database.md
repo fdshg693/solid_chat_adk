@@ -80,7 +80,7 @@
   SELECT * FROM agents WHERE owner IS NULL OR owner = ?
   ```
 * **新規保存時のオーナー紐付け**:
-  データ保存（`saveMemo` / `saveAgent`）の実行時、リクエストヘッダー `X-User-Identity` から抽出したログインユーザー名を `owner` カラムに書き込みます。
+  データ保存（`saveMemo` / `saveAgent`）の実行時、検証済み JWT から抽出したログインユーザー名を `owner` カラムに書き込みます。
 * **削除のアクセス制御**:
   自分が所有しているデータ（または共通データ）のみ削除できるようにするため、削除クエリにも `owner` 条件を付与します。
   ```sql

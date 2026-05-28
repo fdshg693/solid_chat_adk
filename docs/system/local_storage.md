@@ -24,6 +24,7 @@
 
 | キー名 | データ型 | 説明 |
 | :--- | :--- | :--- |
+| `auth_token` | `string` | ログイン完了時にサーバーから返却される署名済みJWT。保護されたAPIリクエストのAuthorizationヘッダーに使用。 |
 | `auth_username` | `string` | ログイン中の認証ユーザー名（Identity）。（例: `"admin"`, `"user1"`） |
 | `auth_role` | `string` | ログイン中ユーザーのシステム権限。（`"admin"` または `"user"`） |
 | `auth_avatar` | `string` | ログイン中ユーザーのデフォルトアバター絵文字。（例: `"👑"`, `"👤"`） |
@@ -110,7 +111,7 @@
 * **セッションの初期化**: ログインが成立した際、`initializeStateForUser()` が呼び出され、`auth_username` をキープレフィックスとした各種情報が読み込まれます。
 * **ログアウト時のクリーンアップ**:
   ログアウト処理（`logoutUser()`）の実行時、以下の挙動が行われます。
-  - グローバルキー（`auth_username`, `auth_role`, `auth_avatar`）がクリアされます。
+  - グローバルキー（`auth_token`, `auth_username`, `auth_role`, `auth_avatar`）がクリアされます。
   - フロントエンドのメモリ上のシグナルが初期状態にリセットされます。
   - > [!NOTE]
     > ユーザーごとの LocalStorage データ（プレフィックス付きのもの）は、次回ログイン時に再開できるよう意図的に保持されます。
