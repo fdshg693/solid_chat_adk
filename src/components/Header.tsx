@@ -2,8 +2,6 @@ import { Show } from 'solid-js';
 import { 
   apiKey, 
   tavilyApiKey, 
-  showSettings, 
-  setShowSettings, 
   createNewSession,
   currentTab,
   setCurrentTab
@@ -20,7 +18,7 @@ export function Header() {
         </div>
       </div>
 
-      <div class="tab-navigation" style="display: flex; gap: 1rem; position: absolute; left: 50%; transform: translateX(-50%);">
+      <div class="tab-navigation" style="display: flex; gap: 0.75rem; align-items: center;">
         <button
           class={`btn-glass ${currentTab() === 'chat' ? 'active' : ''}`}
           onClick={() => setCurrentTab('chat')}
@@ -33,6 +31,12 @@ export function Header() {
         >
           🤖 Agents
         </button>
+        <button
+          class={`btn-glass ${currentTab() === 'settings' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('settings')}
+        >
+          ⚙️ Settings
+        </button>
       </div>
 
       <div class="action-buttons">
@@ -44,16 +48,8 @@ export function Header() {
           <span class="api-key-badge saved">API Key Confirmed</span>
         </Show>
         <Show when={tavilyApiKey()}>
-          <span class="api-key-badge saved" style="margin-left: 8px;">Tavily Active</span>
+          <span class="api-key-badge saved">Tavily Active</span>
         </Show>
-
-        <button
-          class={`btn-glass ${showSettings() ? 'active' : ''}`}
-          onClick={() => setShowSettings(!showSettings())}
-          title="Configure Agent & Key Settings"
-        >
-          ⚙️ Settings
-        </button>
         
         <button
           class="btn-glass"

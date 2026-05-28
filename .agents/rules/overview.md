@@ -43,4 +43,4 @@ This project is an AI Chat application built with a dual-process architecture:
 
 - **Dual-Process Motivation**: `@google/adk` is server-side and depends on Node APIs. Running a local Express backend avoids exposing API keys or relying on client-side polyfills.
 - **Active Session Reset**: Sessions can be started fresh with a settings option in the UI, which resets the state and session IDs.
-- **Customizable System Instructions**: Custom system instructions can be adjusted via a drawer settings interface in the client UI.
+- **Customizable System Instructions**: Custom system instructions can be adjusted via a dedicated settings tab/view in the client UI.

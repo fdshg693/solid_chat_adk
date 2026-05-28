@@ -10,17 +10,20 @@ import {
   setModel,
   instruction,
   setInstruction,
-  showSettings,
-  setShowSettings,
   saveConfiguration,
   clearApiKey,
-  clearTavilyApiKey
+  clearTavilyApiKey,
+  setCurrentTab
 } from '../store/appState';
 
-export function SettingsDrawer() {
+export function SettingsView() {
   return (
-    <Show when={showSettings()}>
-      <form class="settings-drawer" onSubmit={saveConfiguration}>
+    <div class="settings-view">
+      <form class="settings-content" onSubmit={saveConfiguration}>
+        <h2 style="font-family: var(--font-family-display); font-size: 1.5rem; margin-bottom: 0.5rem; color: #fff; font-weight: 700;">
+          ⚙️ App Configuration
+        </h2>
+        
         <div class="settings-grid">
           <div class="settings-group">
             <label class="settings-label">
@@ -85,7 +88,7 @@ export function SettingsDrawer() {
           </label>
           <textarea
             class="input-text"
-            rows={2}
+            rows={4}
             style="resize: none;"
             placeholder="You are a helpful AI assistant..."
             value={instruction()}
@@ -93,9 +96,9 @@ export function SettingsDrawer() {
           />
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 1rem; align-items: center;">
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; align-items: center; margin-top: 1rem;">
           <Show when={apiKey()}>
-            <button type="button" class="btn-glass" onClick={() => setShowSettings(false)}>
+            <button type="button" class="btn-glass" onClick={() => setCurrentTab('chat')}>
               Cancel
             </button>
           </Show>
@@ -104,6 +107,6 @@ export function SettingsDrawer() {
           </button>
         </div>
       </form>
-    </Show>
+    </div>
   );
 }

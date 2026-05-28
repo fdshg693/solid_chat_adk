@@ -44,7 +44,9 @@ export interface Agent {
 
 export const [agents, setAgents] = createSignal<Agent[]>([]);
 export const [selectedAgentId, setSelectedAgentId] = createSignal(localStorage.getItem('active_agent_id') || '');
-export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents'>('chat');
+export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents' | 'settings'>(
+  localStorage.getItem('gemini_api_key') ? 'chat' : 'settings'
+);
 
 // Helper to fetch with retry to allow backend time to start up
 const fetchWithRetry = async (url: string, retries = 5, delay = 1000) => {
@@ -78,7 +80,6 @@ fetchWithRetry('/api/agents')
   })
   .catch(e => console.error('Failed to fetch initial agents', e));
 
-export const [showSettings, setShowSettings] = createSignal(!localStorage.getItem('gemini_api_key'));
 export const [userInput, setUserInput] = createSignal('');
 export const [messages, setMessages] = createSignal<Message[]>([]);
 export const [loading, setLoading] = createSignal(false);
@@ -155,7 +156,7 @@ export const saveConfiguration = (e: Event) => {
   setApiKey(key);
   setTavilyApiKey(tavilyKey);
   setErrorMessage('');
-  setShowSettings(false);
+  setCurrentTab('chat');
 };
 
 // Action: Clear active key
@@ -163,7 +164,7 @@ export const clearApiKey = () => {
   localStorage.removeItem('gemini_api_key');
   setApiKey('');
   setTempKey('');
-  setShowSettings(true);
+  setCurrentTab('settings');
 };
 
 export const clearTavilyApiKey = () => {
@@ -233,7 +234,7 @@ export const sendMessage = async (e: Event) => {
 
   if (!apiKey()) {
     setErrorMessage('Please configure and save your Gemini API Key in the settings panel above first.');
-    setShowSettings(true);
+    setCurrentTab('settings');
     return;
   }
 

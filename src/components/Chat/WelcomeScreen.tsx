@@ -1,5 +1,5 @@
 import { Show } from 'solid-js';
-import { apiKey, setShowSettings } from '../../store/appState';
+import { apiKey, setCurrentTab } from '../../store/appState';
 
 export function WelcomeScreen() {
   return (
@@ -8,10 +8,10 @@ export function WelcomeScreen() {
       <h2 class="welcome-title">Welcome to Ultraviolet</h2>
       <p class="welcome-desc">
         This chat MVP demonstrates SolidJS running a local Node-backed `@google/adk` LlmAgent. 
-        Enter your API key above to start chat.
+        Enter your API key to start chat.
       </p>
       <Show when={!apiKey()}>
-        <button class="btn-primary" onClick={() => setShowSettings(true)}>
+        <button class="btn-primary" onClick={() => setCurrentTab('settings')}>
           ⚙️ Setup API Key
         </button>
       </Show>

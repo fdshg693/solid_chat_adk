@@ -1,5 +1,5 @@
 import { Header } from './components/Header';
-import { SettingsDrawer } from './components/SettingsDrawer';
+import { SettingsView } from './components/SettingsDrawer';
 import { AgentManager } from './components/AgentManager';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/Chat/MessageList';
@@ -18,11 +18,12 @@ function App() {
       {/* Header bar */}
       <Header />
 
-      {/* Settings Drawer Panel */}
-      <SettingsDrawer />
-
       <Show when={currentTab() === 'agents'}>
         <AgentManager />
+      </Show>
+
+      <Show when={currentTab() === 'settings'}>
+        <SettingsView />
       </Show>
 
       {/* Main workspace */}
