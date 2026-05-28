@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import { agents, users, type UserMemo } from '../../store/appState';
+import { agents, personas, type UserMemo } from '../../store/appState';
 
 interface MemoCardProps {
   memo: UserMemo;
@@ -42,7 +42,7 @@ export function MemoCard(props: MemoCardProps) {
             value={props.memo.creator}
             onChange={(e) => props.onUpdate(props.memo.id, { creator: e.currentTarget.value })}
           >
-            <For each={users()}>{(u) => <option value={u.name}>{u.name}</option>}</For>
+            <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
             <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
           </select>
         </div>
@@ -55,7 +55,7 @@ export function MemoCard(props: MemoCardProps) {
             value={props.memo.updater}
             onChange={(e) => props.onUpdate(props.memo.id, { updater: e.currentTarget.value })}
           >
-            <For each={users()}>{(u) => <option value={u.name}>{u.name}</option>}</For>
+            <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
             <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
           </select>
         </div>
@@ -65,15 +65,15 @@ export function MemoCard(props: MemoCardProps) {
       <div style="display: flex; flex-direction: column; gap: 0.25rem;">
         <label style="font-size: 0.7rem; color: var(--text-muted);">Target Audiences</label>
         <div class="checklist-group" style="max-height: 80px; padding: 0.5rem;">
-          <For each={users()}>
-            {(u) => (
+          <For each={personas()}>
+            {(p) => (
               <label class="checklist-item">
                 <input
                   type="checkbox"
-                  checked={(props.memo.targetAudiences || []).includes(u.name)}
-                  onChange={() => props.toggleAudience(props.memo.id, u.name)}
+                  checked={(props.memo.targetAudiences || []).includes(p.name)}
+                  onChange={() => props.toggleAudience(props.memo.id, p.name)}
                 />
-                <span style="font-size: 0.75rem;">{u.name}</span>
+                <span style="font-size: 0.75rem;">{p.name}</span>
               </label>
             )}
           </For>

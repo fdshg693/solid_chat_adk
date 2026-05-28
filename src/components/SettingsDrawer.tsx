@@ -1,5 +1,5 @@
 import { AppConfigForm } from './Settings/AppConfigForm';
-import { UserSettings } from './Settings/UserSettings';
+import { PersonaSettings } from './Settings/PersonaSettings';
 
 export function SettingsView() {
   return (
@@ -9,8 +9,8 @@ export function SettingsView() {
         {/* App Configuration Form */}
         <AppConfigForm />
 
-        {/* User Switcher and Management Section */}
-        <UserSettings />
+        {/* Persona Switcher and Management Section */}
+        <PersonaSettings />
 
       </div>
     </div>

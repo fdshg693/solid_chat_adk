@@ -2,7 +2,7 @@ import { Index } from 'solid-js';
 import {
   userMemos,
   setUserMemos,
-  activeUser,
+  activePersona,
   type UserMemo,
 } from '../store/appState';
 import { CreateMemoForm } from './Memo/CreateMemoForm';
@@ -26,7 +26,7 @@ export function MemoManager() {
   const updateMemoField = (id: string, updates: Partial<UserMemo>) => {
     const memo = userMemos().find(m => m.id === id);
     if (!memo) return;
-    const updated = { ...memo, ...updates, updater: activeUser() ? activeUser().name : 'admin' };
+    const updated = { ...memo, ...updates, updater: activePersona() ? activePersona().name : 'admin' };
     setUserMemos(userMemos().map(m => m.id === id ? updated : m));
     saveToBackend(updated);
   };

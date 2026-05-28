@@ -1,13 +1,13 @@
 import { createSignal } from 'solid-js';
 
-export interface User {
+export interface Persona {
   id: string;
   name: string;
   role: 'admin' | 'user';
   avatar: string;
 }
 
-const DEFAULT_USERS: User[] = [
+const DEFAULT_PERSONAS: Persona[] = [
   { id: 'u-1', name: 'admin', role: 'admin', avatar: '👑' },
   { id: 'u-2', name: 'user1', role: 'user', avatar: '👤' }
 ];
@@ -24,19 +24,29 @@ export const getAuthKey = (key: string): string => {
 };
 
 // Initial Persona and Session loaders
-const getInitialUsers = (): User[] => {
-  const saved = localStorage.getItem(getAuthKey('chat_users'));
+const getInitialPersonas = (): Persona[] => {
+  let saved = localStorage.getItem(getAuthKey('chat_personas'));
+  let usingLegacy = false;
+  if (!saved) {
+    saved = localStorage.getItem(getAuthKey('chat_users'));
+    usingLegacy = true;
+  }
+  
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        if (usingLegacy) {
+          localStorage.setItem(getAuthKey('chat_personas'), saved);
+          localStorage.removeItem(getAuthKey('chat_users'));
+        }
         return parsed;
       }
     } catch (e) {
-      console.error('Failed to parse users', e);
+      console.error('Failed to parse personas', e);
     }
   }
-  const defaultPersonas: User[] = [];
+  const defaultPersonas: Persona[] = [];
   const name = authUsername();
   if (name) {
     defaultPersonas.push({
@@ -49,57 +59,69 @@ const getInitialUsers = (): User[] => {
       defaultPersonas.push({ id: 'u-2', name: 'assistant', role: 'user', avatar: '🤖' });
     }
   } else {
-    defaultPersonas.push(...DEFAULT_USERS);
+    defaultPersonas.push(...DEFAULT_PERSONAS);
   }
-  localStorage.setItem(getAuthKey('chat_users'), JSON.stringify(defaultPersonas));
+  localStorage.setItem(getAuthKey('chat_personas'), JSON.stringify(defaultPersonas));
   return defaultPersonas;
 };
 
-const getInitialActiveUser = (initialUsers: User[]): User => {
-  const savedId = localStorage.getItem(getAuthKey('active_user_id'));
-  if (savedId) {
-    const found = initialUsers.find(u => u.id === savedId);
-    if (found) return found;
+const getInitialActivePersona = (initialP: Persona[]): Persona => {
+  let savedId = localStorage.getItem(getAuthKey('active_persona_id'));
+  let usingLegacy = false;
+  if (!savedId) {
+    savedId = localStorage.getItem(getAuthKey('active_user_id'));
+    usingLegacy = true;
   }
-  const fallback = initialUsers[0] || DEFAULT_USERS[0];
-  localStorage.setItem(getAuthKey('active_user_id'), fallback.id);
+
+  if (savedId) {
+    const found = initialP.find(p => p.id === savedId);
+    if (found) {
+      if (usingLegacy) {
+        localStorage.setItem(getAuthKey('active_persona_id'), savedId);
+        localStorage.removeItem(getAuthKey('active_user_id'));
+      }
+      return found;
+    }
+  }
+  const fallback = initialP[0] || DEFAULT_PERSONAS[0];
+  localStorage.setItem(getAuthKey('active_persona_id'), fallback.id);
   return fallback;
 };
 
-const initialUsers = getInitialUsers();
-const initialActiveUser = getInitialActiveUser(initialUsers);
+const initialPersonas = getInitialPersonas();
+const initialActivePersona = getInitialActivePersona(initialPersonas);
 
-export const [users, setUsers] = createSignal<User[]>(initialUsers);
-export const [activeUser, setActiveUser] = createSignal<User>(initialActiveUser);
+export const [personas, setPersonas] = createSignal<Persona[]>(initialPersonas);
+export const [activePersona, setActivePersona] = createSignal<Persona>(initialActivePersona);
 
-export const switchUser = (id: string) => {
-  const found = users().find(u => u.id === id);
+export const switchPersona = (id: string) => {
+  const found = personas().find(p => p.id === id);
   if (found) {
-    setActiveUser(found);
-    localStorage.setItem(getAuthKey('active_user_id'), id);
+    setActivePersona(found);
+    localStorage.setItem(getAuthKey('active_persona_id'), id);
   }
 };
 
-export const addUser = (name: string, role: 'admin' | 'user', avatar: string) => {
-  const newUser: User = {
+export const addPersona = (name: string, role: 'admin' | 'user', avatar: string) => {
+  const newPersona: Persona = {
     id: `u-${Date.now()}`,
     name,
     role,
     avatar
   };
-  const updated = [...users(), newUser];
-  setUsers(updated);
-  localStorage.setItem(getAuthKey('chat_users'), JSON.stringify(updated));
-  return newUser;
+  const updated = [...personas(), newPersona];
+  setPersonas(updated);
+  localStorage.setItem(getAuthKey('chat_personas'), JSON.stringify(updated));
+  return newPersona;
 };
 
-export const deleteUser = (id: string) => {
-  if (id === activeUser().id) {
+export const deletePersona = (id: string) => {
+  if (id === activePersona().id) {
     return false;
   }
-  const updated = users().filter(u => u.id !== id);
-  setUsers(updated);
-  localStorage.setItem(getAuthKey('chat_users'), JSON.stringify(updated));
+  const updated = personas().filter(p => p.id !== id);
+  setPersonas(updated);
+  localStorage.setItem(getAuthKey('chat_personas'), JSON.stringify(updated));
   return true;
 };
 
@@ -206,11 +228,11 @@ export const initializeStateForUser = () => {
     'You are a helpful and concise AI assistant. Address the user directly.'
   );
 
-  const loadedUsers = getInitialUsers();
-  setUsers(loadedUsers);
+  const loadedPersonas = getInitialPersonas();
+  setPersonas(loadedPersonas);
   
-  const activeP = getInitialActiveUser(loadedUsers);
-  setActiveUser(activeP);
+  const activeP = getInitialActivePersona(loadedPersonas);
+  setActivePersona(activeP);
 
   setSelectedAgentId(localStorage.getItem(getAuthKey('active_agent_id')) || '');
 
@@ -544,8 +566,8 @@ export const logoutUser = () => {
   setAuthAvatar(null);
   
   // Clear frontend runtime state
-  setUsers(DEFAULT_USERS);
-  setActiveUser(DEFAULT_USERS[0]);
+  setPersonas(DEFAULT_PERSONAS);
+  setActivePersona(DEFAULT_PERSONAS[0]);
   setSessions([]);
   setSessionId('');
   setMessages([]);

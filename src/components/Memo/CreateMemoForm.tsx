@@ -1,5 +1,5 @@
 import { For, createSignal } from 'solid-js';
-import { agents, users, activeUser } from '../../store/appState';
+import { agents, personas, activePersona } from '../../store/appState';
 
 interface CreateMemoFormProps {
   onCreate: (memo: {
@@ -14,8 +14,8 @@ interface CreateMemoFormProps {
 export function CreateMemoForm(props: CreateMemoFormProps) {
   const [newTitle, setNewTitle] = createSignal('');
   const [newContent, setNewContent] = createSignal('');
-  const [newCreator, setNewCreator] = createSignal(activeUser() ? activeUser().name : 'admin');
-  const [newUpdater, setNewUpdater] = createSignal(activeUser() ? activeUser().name : 'admin');
+  const [newCreator, setNewCreator] = createSignal(activePersona() ? activePersona().name : 'admin');
+  const [newUpdater, setNewUpdater] = createSignal(activePersona() ? activePersona().name : 'admin');
   const [newTargetAudiences, setNewTargetAudiences] = createSignal<string[]>([]);
 
   // Helper to toggle audience in new memo state
@@ -41,8 +41,8 @@ export function CreateMemoForm(props: CreateMemoFormProps) {
     // Reset inputs
     setNewTitle('');
     setNewContent('');
-    setNewCreator(activeUser() ? activeUser().name : 'admin');
-    setNewUpdater(activeUser() ? activeUser().name : 'admin');
+    setNewCreator(activePersona() ? activePersona().name : 'admin');
+    setNewUpdater(activePersona() ? activePersona().name : 'admin');
     setNewTargetAudiences([]);
   };
 
@@ -73,7 +73,7 @@ export function CreateMemoForm(props: CreateMemoFormProps) {
               value={newCreator()}
               onChange={(e) => setNewCreator(e.currentTarget.value)}
             >
-              <For each={users()}>{(u) => <option value={u.name}>{u.name}</option>}</For>
+              <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
               <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
             </select>
           </div>
@@ -86,7 +86,7 @@ export function CreateMemoForm(props: CreateMemoFormProps) {
               value={newUpdater()}
               onChange={(e) => setNewUpdater(e.currentTarget.value)}
             >
-              <For each={users()}>{(u) => <option value={u.name}>{u.name}</option>}</For>
+              <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
               <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
             </select>
           </div>
@@ -97,15 +97,15 @@ export function CreateMemoForm(props: CreateMemoFormProps) {
         <div style="display: flex; flex-direction: column; gap: 0.4rem;">
           <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Target Audiences (Multiple Select)</label>
           <div class="checklist-group">
-            <For each={users()}>
-              {(u) => (
+            <For each={personas()}>
+              {(p) => (
                 <label class="checklist-item">
                   <input
                     type="checkbox"
-                    checked={newTargetAudiences().includes(u.name)}
-                    onChange={() => toggleNewAudience(u.name)}
+                    checked={newTargetAudiences().includes(p.name)}
+                    onChange={() => toggleNewAudience(p.name)}
                   />
-                  <span>{u.name}</span>
+                  <span>{p.name}</span>
                 </label>
               )}
             </For>

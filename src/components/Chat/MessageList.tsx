@@ -7,7 +7,7 @@ import {
   sessionId, 
   setMessages, 
   scrollToBottom,
-  activeUser,
+  activePersona,
   agents,
   selectedAgentId
 } from '../../store/appState';
@@ -46,7 +46,7 @@ export function MessageList() {
           <div class={`message-row ${msg.role}`}>
             <div class="message-bubble-wrapper">
               <div class={`message-avatar ${msg.role}`}>
-                {msg.role === 'user' ? activeUser().avatar : getAssistantAvatar()}
+                {msg.role === 'user' ? activePersona().avatar : getAssistantAvatar()}
               </div>
               <div>
                 <div class="message-bubble">

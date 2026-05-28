@@ -18,8 +18,8 @@ graph TD
 
     subgraph "Frontend / UI Layer"
         ID -->|名前空間プレフィックス| LS[LocalStorage隔離]
-        LS -->|保持| P_LIST[ペルソナリスト: chat_users]
-        P_LIST -->|選択| P_ACTIVE[アクティブペルソナ: Persona]
+        LS -->|保持| P_LIST[ペルソナリスト: chat_personas]
+        P_LIST -->|選択| P_ACTIVE[アクティブペルソナ: activePersona]
     end
 
     style ID fill:#4f46e5,stroke:#312e81,color:#fff
@@ -31,7 +31,7 @@ graph TD
 | 区分 | 認証ユーザー (Identity) | 表示用ペルソナ (Persona) |
 | :--- | :--- | :--- |
 | **定義** | システムへのログインおよびセキュリティ境界となる実体。 | チャット画面上で会話の発言者やUI上の表示となる役割。 |
-| **保存先** | バックエンド SQLite データベース (`users` テーブル) | フロントエンド `LocalStorage` (`${authUsername}_chat_users`) |
+| **保存先** | バックエンド SQLite データベース (`users` テーブル) | フロントエンド `LocalStorage` (`${authUsername}_chat_personas`) |
 | **主な用途** | - アカウント認証 (ログイン/サインアップ)<br>- データ（メモ・エージェント）の所有権隔離 | - チャットメッセージの送信元名とアバター表示<br>- メモの作成者・更新者としての選択項目 |
 | **作成制限** | ログイン画面から誰でも新規作成（サインアップ）可能。 | 通常ユーザーは自分のみ。管理者 (`admin` ロール) のみ複数作成可能。 |
 | **データ隔離** | ユーザー名ごとにデータベースレコードが厳格に分離される。 | 認証ユーザーごとの `LocalStorage` 内で個別に保持される。 |
@@ -55,10 +55,10 @@ graph TD
 ### ② フロントエンド実装コード
 - **認証画面**: [LoginScreen.tsx](file:///c:/CodeRoot/solid_chat_adk/src/components/LoginScreen.tsx)
   - ログイン、新規ユーザー登録、アバター絵文字選択を提供する UI コンポーネント。
-- **プロファイル管理**: [UserSettings.tsx](file:///c:/CodeRoot/solid_chat_adk/src/components/Settings/UserSettings.tsx)
+- **ペルソナ管理**: [PersonaSettings.tsx](file:///c:/CodeRoot/solid_chat_adk/src/components/Settings/PersonaSettings.tsx)
   - ペルソナの切り替え、新規ペルソナの追加、削除を行う管理者向けのコントロールパネル UI コンポーネント。
 - **状態管理ストア**: [appState.ts](file:///c:/CodeRoot/solid_chat_adk/src/store/appState.ts)
-  - ログイン状態（`authUsername` 等）やアクティブなペルソナ（`activeUser`）の制御ロジックを実装しています。
+  - ログイン状態（`authUsername` 等）やアクティブなペルソナ（`activePersona`）の制御ロジックを実装しています。
 
 ### ③ バックエンド実装コード
 - **サーバーエントリポイント**: [server.ts](file:///c:/CodeRoot/solid_chat_adk/server.ts)

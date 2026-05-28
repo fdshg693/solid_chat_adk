@@ -4,7 +4,7 @@ import {
   tavilyApiKey, 
   currentTab,
   setCurrentTab,
-  activeUser,
+  activePersona,
   authUsername,
   authAvatar,
   logoutUser
@@ -67,8 +67,8 @@ export function Header() {
           title="アクティブペルソナ (Persona) 設定へ"
           style="margin: 0; cursor: pointer;"
         >
-          <span>{activeUser().avatar}</span>
-          <span style="font-weight: 600;">{activeUser().name}</span>
+          <span>{activePersona().avatar}</span>
+          <span style="font-weight: 600;">{activePersona().name}</span>
           <span style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px; margin-left: 0.35rem; font-weight: 900; color: var(--color-primary); letter-spacing: 0.5px;">PERSONA</span>
         </div>
 
