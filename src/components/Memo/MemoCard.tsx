@@ -32,32 +32,15 @@ export function MemoCard(props: MemoCardProps) {
         </button>
       </div>
 
-      {/* Creator / Updater selects */}
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-          <label style="font-size: 0.7rem; color: var(--text-muted);">Creator</label>
-          <select
-            class="input-text"
-            style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--bg-dark); color: var(--text-bright);"
-            value={props.memo.creator}
-            onChange={(e) => props.onUpdate(props.memo.id, { creator: e.currentTarget.value })}
-          >
-            <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
-            <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
-          </select>
+      {/* Creator / Updater Display (Read-Only) */}
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(0, 0, 0, 0.15); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.03);">
+        <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Creator</span>
+          <span style="font-size: 0.8rem; color: var(--text-bright); font-weight: 500;">{props.memo.creator}</span>
         </div>
-
-        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-          <label style="font-size: 0.7rem; color: var(--text-muted);">Updater</label>
-          <select
-            class="input-text"
-            style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--bg-dark); color: var(--text-bright);"
-            value={props.memo.updater}
-            onChange={(e) => props.onUpdate(props.memo.id, { updater: e.currentTarget.value })}
-          >
-            <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
-            <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
-          </select>
+        <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Updater</span>
+          <span style="font-size: 0.8rem; color: var(--text-bright); font-weight: 500;">{props.memo.updater}</span>
         </div>
       </div>
 

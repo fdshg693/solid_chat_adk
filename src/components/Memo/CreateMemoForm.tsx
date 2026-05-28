@@ -14,8 +14,6 @@ interface CreateMemoFormProps {
 export function CreateMemoForm(props: CreateMemoFormProps) {
   const [newTitle, setNewTitle] = createSignal('');
   const [newContent, setNewContent] = createSignal('');
-  const [newCreator, setNewCreator] = createSignal(activePersona() ? activePersona().name : 'admin');
-  const [newUpdater, setNewUpdater] = createSignal(activePersona() ? activePersona().name : 'admin');
   const [newTargetAudiences, setNewTargetAudiences] = createSignal<string[]>([]);
 
   // Helper to toggle audience in new memo state
@@ -30,19 +28,18 @@ export function CreateMemoForm(props: CreateMemoFormProps) {
 
   const handleSubmit = () => {
     if (!newTitle().trim()) return;
+    const currentPersonaName = activePersona() ? activePersona().name : 'admin';
     props.onCreate({
       title: newTitle().trim(),
       content: newContent().trim(),
-      creator: newCreator(),
-      updater: newUpdater(),
+      creator: currentPersonaName,
+      updater: currentPersonaName,
       targetAudiences: newTargetAudiences()
     });
 
     // Reset inputs
     setNewTitle('');
     setNewContent('');
-    setNewCreator(activePersona() ? activePersona().name : 'admin');
-    setNewUpdater(activePersona() ? activePersona().name : 'admin');
     setNewTargetAudiences([]);
   };
 
@@ -51,46 +48,16 @@ export function CreateMemoForm(props: CreateMemoFormProps) {
       <h3 style="color: var(--text-primary); margin-bottom: 1rem; font-family: var(--font-family-display); font-size: 1.2rem;">Create New Memo</h3>
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         
-        {/* Grid for creator/updater/audiences */}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-          
-          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Title</label>
-            <input
-              type="text"
-              class="input-text"
-              placeholder="Memo Title"
-              value={newTitle()}
-              onInput={(e) => setNewTitle(e.currentTarget.value)}
-            />
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Creator</label>
-            <select
-              class="input-text"
-              style="background: var(--bg-dark); color: var(--text-bright);"
-              value={newCreator()}
-              onChange={(e) => setNewCreator(e.currentTarget.value)}
-            >
-              <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
-              <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
-            </select>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Updater</label>
-            <select
-              class="input-text"
-              style="background: var(--bg-dark); color: var(--text-bright);"
-              value={newUpdater()}
-              onChange={(e) => setNewUpdater(e.currentTarget.value)}
-            >
-              <For each={personas()}>{(p) => <option value={p.name}>{p.name}</option>}</For>
-              <For each={agents()}>{(a) => <option value={a.name}>{a.name}</option>}</For>
-            </select>
-          </div>
-
+        {/* Title input */}
+        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+          <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">Title</label>
+          <input
+            type="text"
+            class="input-text"
+            placeholder="Memo Title"
+            value={newTitle()}
+            onInput={(e) => setNewTitle(e.currentTarget.value)}
+          />
         </div>
 
         {/* Checklist for Multi-Select Target Audiences */}
