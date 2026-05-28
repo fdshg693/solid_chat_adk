@@ -9,6 +9,7 @@ import {
   authAvatar,
   logoutUser
 } from '../store/appState';
+import './Header.css';
 
 export function Header() {
   return (
@@ -21,7 +22,7 @@ export function Header() {
         </div>
       </div>
 
-      <div class="tab-navigation" style="display: flex; gap: 0.75rem; align-items: center;">
+      <div class="tab-navigation">
         <button
           class={`btn-glass ${currentTab() === 'chat' ? 'active' : ''}`}
           onClick={() => setCurrentTab('chat')}
@@ -48,47 +49,44 @@ export function Header() {
         </button>
       </div>
 
-      <div class="action-buttons" style="display: flex; gap: 0.5rem; align-items: center;">
+      <div class="action-buttons">
         {/* Authenticated Identity Badge */}
         <div 
-          class="user-badge"
-          style="background: rgba(6,182,212,0.15); border-color: rgba(6,182,212,0.3); color: #22d3ee; margin: 0;"
+          class="user-badge header-identity-badge"
           title="ログイン中の認証ユーザー名 (Identity)"
         >
           <span>{authAvatar() || '👤'}</span>
-          <span style="font-weight: 700; color: #fff;">{authUsername()}</span>
-          <span style="font-size: 0.65rem; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px; margin-left: 0.35rem; font-weight: 900; letter-spacing: 0.5px;">ID</span>
+          <span class="header-identity-badge-name">{authUsername()}</span>
+          <span class="header-identity-badge-tag">ID</span>
         </div>
 
         {/* Active Persona Badge */}
         <div 
-          class="user-badge"
+          class="user-badge header-persona-badge"
           onClick={() => setCurrentTab('settings')}
           title="アクティブペルソナ (Persona) 設定へ"
-          style="margin: 0; cursor: pointer;"
         >
           <span>{activePersona().avatar}</span>
-          <span style="font-weight: 600;">{activePersona().name}</span>
-          <span style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px; margin-left: 0.35rem; font-weight: 900; color: var(--color-primary); letter-spacing: 0.5px;">PERSONA</span>
+          <span class="header-persona-badge-name">{activePersona().name}</span>
+          <span class="header-persona-badge-tag">PERSONA</span>
         </div>
 
         {/* API key status indicator badge */}
         <Show
           when={apiKey()}
-          fallback={<span class="api-key-badge missing" style="margin: 0;">API Key Missing</span>}
+          fallback={<span class="api-key-badge missing">API Key Missing</span>}
         >
-          <span class="api-key-badge saved" style="margin: 0;">API Key Confirmed</span>
+          <span class="api-key-badge saved">API Key Confirmed</span>
         </Show>
         <Show when={tavilyApiKey()}>
-          <span class="api-key-badge saved" style="margin: 0;">Tavily Active</span>
+          <span class="api-key-badge saved">Tavily Active</span>
         </Show>
 
         {/* Logout Button */}
         <button
           type="button"
-          class="btn-glass"
+          class="btn-glass header-logout-btn"
           onClick={() => { if (confirm('ログアウトしますか？')) logoutUser(); }}
-          style="color: var(--color-error); border-color: rgba(239,68,68,0.2); font-weight: 600; margin: 0; padding: 0.4rem 0.8rem; font-size: 0.82rem;"
           title="ログアウトする"
         >
           🚪 Logout

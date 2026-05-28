@@ -1,0 +1,22 @@
+/* Agent Manager Styling */
+
+.agent-manager-view {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease;
+}
+
+.agent-manager-content {
+  width: 100%;
+  max-width: 800px;
+  background: rgba(18, 20, 32, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-lg);
+}

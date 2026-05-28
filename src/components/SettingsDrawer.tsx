@@ -1,5 +1,6 @@
 import { AppConfigForm } from './Settings/AppConfigForm';
 import { PersonaSettings } from './Settings/PersonaSettings';
+import './Settings/Settings.css';
 
 export function SettingsView() {
   return (

@@ -8,6 +8,7 @@ import {
   messages,
   createNewSession,
 } from '../store/appState';
+import './Sidebar.css';
 
 export function Sidebar() {
 

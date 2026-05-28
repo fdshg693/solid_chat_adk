@@ -1,0 +1,117 @@
+/* Sidebar Styling */
+
+.sidebar-panel {
+  width: 280px;
+  background: rgba(10, 11, 18, 0.5);
+  border-right: 1px solid var(--border-color);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .sidebar-panel {
+    display: none;
+  }
+}
+
+.sidebar-title {
+  font-family: var(--font-family-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-card {
+  background: rgba(27, 30, 48, 0.4);
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebar-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.sidebar-info-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Sidebar sessions list and conversation history */
+.sidebar-sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.session-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  background: rgba(27, 30, 48, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.session-list-item:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: var(--text-primary);
+}
+
+.session-list-item.active {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+  border-color: var(--color-secondary);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+}
+
+.session-item-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 0.5rem;
+}
+
+.btn-delete-session {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.btn-delete-session:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}

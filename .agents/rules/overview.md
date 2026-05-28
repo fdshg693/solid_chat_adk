@@ -24,9 +24,10 @@ This project is an AI Chat application built with a dual-process architecture:
 - `public/` - Static public assets.
 - `src/`
   - `assets/` - App asset directories.
-  - `components/` - App UI components including Header, Sidebar, AgentManager, SettingsDrawer, MemoManager, and Chat/Memo subcomponents.
+  - `components/` - App UI components including Header, Sidebar, AgentManager, SettingsDrawer, MemoManager, and Chat/Memo subcomponents (with scoped stylesheets next to components).
+  - `styles/` - Shared design system styles (variables, base HTML element stylings, and global UI utilities).
   - `App.tsx` - Primary SolidJS frontend client.
-  - `index.css` - Obsidian & Ultraviolet CSS design system.
+  - `index.css` - Main entry stylesheet that imports the modular design system styles.
   - `index.tsx` - SolidJS client mounter.
 - `server.ts` - Express + TS backend instantiating the `@google/adk` agent.
 - `package.json` - Unified scripts and dependencies.

@@ -1,5 +1,6 @@
 import { For, createSignal } from 'solid-js';
 import { agents, setAgents, type Agent, authFetch } from '../store/appState';
+import './AgentManager.css';
 
 export function AgentManager() {
   const [editingId, setEditingId] = createSignal<string | null>(null);

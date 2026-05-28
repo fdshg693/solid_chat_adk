@@ -9,6 +9,7 @@ import { AgentSelector } from './components/Chat/AgentSelector';
 import { LoginScreen } from './components/LoginScreen';
 import { currentTab, authUsername } from './store/appState';
 import { Show } from 'solid-js';
+import './components/Chat/Chat.css';
 
 function App() {
   return (

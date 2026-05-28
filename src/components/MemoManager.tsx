@@ -11,6 +11,7 @@ import {
 } from '../store/appState';
 import { CreateMemoForm } from './Memo/CreateMemoForm';
 import { MemoCard } from './Memo/MemoCard';
+import './Memo/Memo.css';
 
 export function MemoManager() {
   const saveMemoEdits = async (id: string, updates: Partial<UserMemo>) => {
