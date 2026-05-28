@@ -24,7 +24,7 @@ This project is an AI Chat application built with a dual-process architecture:
 - `public/` - Static public assets.
 - `src/`
   - `assets/` - App asset directories.
-  - `components/` - App UI components including Header, Sidebar, AgentManager, SettingsDrawer, MemoManager, and Chat subcomponents.
+  - `components/` - App UI components including Header, Sidebar, AgentManager, SettingsDrawer, MemoManager, and Chat/Memo subcomponents.
   - `App.tsx` - Primary SolidJS frontend client.
   - `index.css` - Obsidian & Ultraviolet CSS design system.
   - `index.tsx` - SolidJS client mounter.
