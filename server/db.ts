@@ -226,6 +226,41 @@ export const deleteMemo = (id: string, owner: string): void => {
   stmt.run(id, owner);
 };
 
+export const getMemosForAudiences = (owner: string, audiences: string[]): UserMemo[] => {
+  if (audiences.length === 0) return [];
+  const placeholders = audiences.map(() => '?').join(',');
+  const stmt = db.prepare(`
+    SELECT * FROM memos 
+    WHERE owner = ? 
+      AND id IN (SELECT memo_id FROM memo_audiences WHERE username IN (${placeholders}))
+  `);
+  const rows = stmt.all(owner, ...audiences) as unknown as UserMemoRow[];
+  return rows.map(row => {
+    const memo = mapRowToMemo(row);
+    memo.targetAudiences = getAudiencesForMemo(row.id);
+    return memo;
+  });
+};
+
+export const getMemoByTitleForAudiences = (
+  title: string,
+  owner: string,
+  audiences: string[]
+): UserMemo | undefined => {
+  if (audiences.length === 0) return undefined;
+  const placeholders = audiences.map(() => '?').join(',');
+  const stmt = db.prepare(`
+    SELECT * FROM memos 
+    WHERE title = ? AND owner = ? 
+      AND id IN (SELECT memo_id FROM memo_audiences WHERE username IN (${placeholders}))
+  `);
+  const row = stmt.get(title, owner, ...audiences) as unknown as UserMemoRow | undefined;
+  if (!row) return undefined;
+  const memo = mapRowToMemo(row);
+  memo.targetAudiences = getAudiencesForMemo(row.id);
+  return memo;
+};
+
 export interface Agent {
   id: string;
   name: string;

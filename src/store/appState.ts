@@ -457,6 +457,9 @@ export const sendMessage = async (e: Event) => {
       effectiveInstruction = activeAgent.systemPrompt;
     }
 
+    const activePersonaName = activePersona() ? activePersona().name : 'admin';
+    const agentName = activeAgent ? activeAgent.name : 'Global Default';
+
     const response = await authFetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -468,7 +471,9 @@ export const sendMessage = async (e: Event) => {
         tavilyApiKey: tavilyApiKey(),
         sessionId: sessionId(),
         instruction: effectiveInstruction,
-        model: model()
+        model: model(),
+        activePersonaName,
+        agentName
       })
     });
 

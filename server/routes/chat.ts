@@ -9,7 +9,7 @@ chatApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
 
 chatApp.post('/', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { message, apiKey, tavilyApiKey, sessionId, instruction, model } = body;
+  const { message, apiKey, tavilyApiKey, sessionId, instruction, model, activePersonaName, agentName } = body;
 
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     return c.json({ error: 'Gemini API key is required and must be provided.' }, 400);
@@ -44,7 +44,9 @@ chatApp.post('/', async (c) => {
       instruction: systemInstruction,
       owner,
       toolsOptions: {
-        tavilyApiKey
+        tavilyApiKey,
+        activePersonaName,
+        agentName
       }
     });
 
