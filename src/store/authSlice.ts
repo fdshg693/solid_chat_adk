@@ -12,11 +12,31 @@ export const getAuthKey = (key: string): string => {
 };
 
 // Cryptographically secure fetch wrapper adding Authorization header with JWT
-export const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+export const authFetch = async (
+  url: string,
+  options: RequestInit = {},
+  activeContext?: { personaName?: string, agentName?: string }
+): Promise<Response> => {
   const token = localStorage.getItem('auth_token');
-  const headers = {
-    ...options.headers,
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {})
   };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (activeContext?.personaName) {
+    headers['X-Active-Persona'] = encodeURIComponent(activeContext.personaName);
+  } else {
+    headers['X-Active-Persona'] = encodeURIComponent('admin');
+  }
+
+  if (activeContext?.agentName) {
+    headers['X-Active-Agent'] = encodeURIComponent(activeContext.agentName);
+  } else {
+    headers['X-Active-Agent'] = encodeURIComponent('Global Default');
+  }
+
   return fetch(url, { ...options, headers });
 };

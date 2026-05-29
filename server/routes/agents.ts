@@ -1,15 +1,16 @@
 import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 import { getAllAgents, getAgentById, saveAgent, deleteAgent, jwtSecret, type Agent } from '../db';
+import { sessionContextMiddleware, SessionContext } from '../context';
 
 const agentsApp = new Hono();
 
 agentsApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
+agentsApp.use('*', sessionContextMiddleware);
 
 agentsApp.get('/', (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner } = c.get('sessionContext') as SessionContext;
     const agents = getAllAgents(owner);
     return c.json(agents);
   } catch (error: any) {
@@ -20,8 +21,7 @@ agentsApp.get('/', (c) => {
 
 agentsApp.post('/', async (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner } = c.get('sessionContext') as SessionContext;
     const body = await c.req.json();
     const { id, name, systemPrompt, avatar } = body;
     
@@ -40,8 +40,7 @@ agentsApp.post('/', async (c) => {
 
 agentsApp.put('/:id', async (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner } = c.get('sessionContext') as SessionContext;
     const id = c.req.param('id');
     const body = await c.req.json();
     const { name, systemPrompt, avatar } = body;
@@ -69,8 +68,7 @@ agentsApp.put('/:id', async (c) => {
 
 agentsApp.delete('/:id', (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner } = c.get('sessionContext') as SessionContext;
     const id = c.req.param('id');
     deleteAgent(id, owner);
     return c.json({ success: true });

@@ -61,8 +61,13 @@ export const fetchMemos = async (page: number = 1) => {
   const user = authUsername();
   if (!user) return;
   const persona = activePersona() ? activePersona().name : '';
+  const agent = agents().find(a => a.id === selectedAgentId());
+  
   try {
-    const res = await authFetch(`/api/memos?page=${page}&limit=${memoPageSize}&persona=${encodeURIComponent(persona)}`);
+    const res = await authFetch(`/api/memos?page=${page}&limit=${memoPageSize}`, undefined, {
+      personaName: persona,
+      agentName: agent ? agent.name : undefined
+    });
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.memos)) {
@@ -79,8 +84,14 @@ export const fetchMemos = async (page: number = 1) => {
 export const fetchAgents = async () => {
   const user = authUsername();
   if (!user) return;
+  const persona = activePersona() ? activePersona().name : '';
+  const agent = agents().find(a => a.id === selectedAgentId());
+
   try {
-    const res = await authFetch('/api/agents');
+    const res = await authFetch('/api/agents', undefined, {
+      personaName: persona,
+      agentName: agent ? agent.name : undefined
+    });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -265,10 +276,11 @@ export const sendMessage = async (e: Event) => {
         tavilyApiKey: tavilyApiKey(),
         sessionId: sessionId(),
         instruction: effectiveInstruction,
-        model: model(),
-        activePersonaName,
-        agentName
+        model: model()
       })
+    }, {
+      personaName: activePersonaName,
+      agentName: agentName
     });
 
     let data: any = {};

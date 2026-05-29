@@ -2,14 +2,16 @@ import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 import { runAgent } from '../agent';
 import { jwtSecret } from '../db';
+import { sessionContextMiddleware, SessionContext } from '../context';
 
 const chatApp = new Hono();
 
 chatApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
+chatApp.use('*', sessionContextMiddleware);
 
 chatApp.post('/', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { message, apiKey, tavilyApiKey, sessionId, instruction, model, activePersonaName, agentName } = body;
+  const { message, apiKey, tavilyApiKey, sessionId, instruction, model } = body;
 
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     return c.json({ error: 'Gemini API key is required and must be provided.' }, 400);
@@ -34,8 +36,7 @@ chatApp.post('/', async (c) => {
       ? sessionId.trim()
       : 'default-session';
 
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner, activePersonaName, agentName, allowedAudiences } = c.get('sessionContext') as SessionContext;
 
     const { stream, sessId } = await runAgent({
       message,
@@ -46,7 +47,8 @@ chatApp.post('/', async (c) => {
       toolsOptions: {
         tavilyApiKey,
         activePersonaName,
-        agentName
+        agentName,
+        allowedAudiences
       }
     });
 

@@ -1,22 +1,21 @@
 import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 import { getMemosPaginated, saveMemo, deleteMemo, getMemoById, jwtSecret } from '../db';
+import { sessionContextMiddleware, SessionContext } from '../context';
 import crypto from 'node:crypto';
 
 const memosApp = new Hono();
 
 memosApp.use('*', jwt({ secret: jwtSecret, alg: 'HS256' }));
+memosApp.use('*', sessionContextMiddleware);
 
 memosApp.get('/', (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
-    
+    const { owner, allowedAudiences } = c.get('sessionContext') as SessionContext;
     const page = parseInt(c.req.query('page') || '1', 10);
     const limit = parseInt(c.req.query('limit') || '10', 10);
-    const persona = c.req.query('persona');
     
-    const result = getMemosPaginated(owner, page, limit, persona);
+    const result = getMemosPaginated(owner, page, limit, allowedAudiences);
     return c.json(result);
   } catch (error: any) {
     console.error('[Backend] Error fetching memos:', error);
@@ -26,22 +25,28 @@ memosApp.get('/', (c) => {
 
 memosApp.post('/', async (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner, allowedAudiences, activePersonaName, agentName } = c.get('sessionContext') as SessionContext;
     const body = await c.req.json();
     if (!body.title) {
       return c.json({ error: 'Title is required' }, 400);
     }
     
     const id = body.id || `memo-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    
+    // Auto-populate target audiences if not provided
+    let targetAudiences = body.targetAudiences;
+    if (!targetAudiences || targetAudiences.length === 0) {
+      targetAudiences = allowedAudiences;
+    }
+
     const newMemo = {
       id,
       title: body.title,
       content: body.content || '',
-      creator: body.creator,
-      updater: body.updater,
+      creator: body.creator || activePersonaName || 'admin',
+      updater: body.updater || activePersonaName || 'admin',
       owner,
-      targetAudiences: body.targetAudiences
+      targetAudiences
     };
     
     saveMemo(newMemo, owner);
@@ -54,8 +59,7 @@ memosApp.post('/', async (c) => {
 
 memosApp.put('/:id', async (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner, allowedAudiences, activePersonaName } = c.get('sessionContext') as SessionContext;
     const id = c.req.param('id');
     const body = await c.req.json();
     
@@ -69,7 +73,7 @@ memosApp.put('/:id', async (c) => {
       title: body.title !== undefined ? body.title : existing.title,
       content: body.content !== undefined ? body.content : existing.content,
       creator: body.creator !== undefined ? body.creator : existing.creator,
-      updater: body.updater !== undefined ? body.updater : existing.updater,
+      updater: body.updater !== undefined ? body.updater : (activePersonaName || 'admin'),
       owner,
       targetAudiences: body.targetAudiences !== undefined ? body.targetAudiences : existing.targetAudiences
     };
@@ -84,8 +88,7 @@ memosApp.put('/:id', async (c) => {
 
 memosApp.delete('/:id', (c) => {
   try {
-    const payload = c.get('jwtPayload') as any;
-    const owner = payload.username;
+    const { owner } = c.get('sessionContext') as SessionContext;
     const id = c.req.param('id');
     const existing = getMemoById(id, owner);
     if (!existing) {

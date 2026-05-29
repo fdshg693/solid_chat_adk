@@ -135,33 +135,35 @@ export const getMemosPaginated = (
   owner: string,
   page: number,
   limit: number,
-  persona?: string
+  audiences: string[]
 ): { memos: UserMemo[]; total: number } => {
   const offset = (page - 1) * limit;
 
   let total = 0;
   let rows: UserMemoRow[] = [];
 
-  if (persona) {
-    // Get total matching memos filtered by persona audience
+  if (audiences.length > 0) {
+    const placeholders = audiences.map(() => '?').join(',');
+    
+    // Get total matching memos filtered by audiences
     const countStmt = db.prepare(`
       SELECT COUNT(*) as count FROM memos 
       WHERE owner = ? 
-        AND id IN (SELECT memo_id FROM memo_audiences WHERE username = ?)
+        AND id IN (SELECT memo_id FROM memo_audiences WHERE username IN (${placeholders}))
     `);
-    const totalResult = countStmt.get(owner, persona) as { count: number };
+    const totalResult = countStmt.get(owner, ...audiences) as { count: number };
     total = totalResult ? totalResult.count : 0;
 
-    // Get paginated memos filtered by persona audience ordered from newest to oldest
+    // Get paginated memos filtered by audiences ordered from newest to oldest
     const stmt = db.prepare(`
       SELECT * FROM memos 
       WHERE owner = ? 
-        AND id IN (SELECT memo_id FROM memo_audiences WHERE username = ?) 
+        AND id IN (SELECT memo_id FROM memo_audiences WHERE username IN (${placeholders})) 
       ORDER BY id DESC LIMIT ? OFFSET ?
     `);
-    rows = stmt.all(owner, persona, limit, offset) as unknown as UserMemoRow[];
+    rows = stmt.all(owner, ...audiences, limit, offset) as unknown as UserMemoRow[];
   } else {
-    // Get total matching memos
+    // Get total matching memos (fallback if no audiences provided)
     const countStmt = db.prepare('SELECT COUNT(*) as count FROM memos WHERE owner = ?');
     const totalResult = countStmt.get(owner) as { count: number };
     total = totalResult ? totalResult.count : 0;

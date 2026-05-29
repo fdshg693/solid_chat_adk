@@ -3,21 +3,9 @@ import { z } from 'zod';
 import { getMemosForAudiences, getMemoByTitleForAudiences, getMemoByTitle, saveMemo } from '../db';
 import crypto from 'node:crypto';
 
-const getAllowedTargets = (activePersonaName?: string, agentName?: string): string[] => {
-  const allowed = new Set<string>();
-  if (activePersonaName) allowed.add(activePersonaName);
-  if (agentName) allowed.add(agentName);
-  
-  // Standard fallback names for the agent
-  allowed.add('assistant');
-  allowed.add('SolidChatAgent');
-  allowed.add('Global Default');
-  
-  return Array.from(allowed);
-};
-
 export const createListUserMemoTitlesTool = (
   owner: string = 'admin',
+  allowedAudiences: string[] = [],
   activePersonaName?: string,
   agentName?: string
 ) => {
@@ -28,8 +16,7 @@ export const createListUserMemoTitlesTool = (
     execute: async () => {
       console.log(`[Backend] Executing listUserMemoTitles tool for owner: ${owner}, activePersona: ${activePersonaName}, agent: ${agentName}.`);
       
-      const allowedTargets = getAllowedTargets(activePersonaName, agentName);
-      const memos = getMemosForAudiences(owner, allowedTargets);
+      const memos = getMemosForAudiences(owner, allowedAudiences);
       
       if (!memos || memos.length === 0) {
         return { titles: [], message: 'No memos available for your audience.' };
@@ -42,6 +29,7 @@ export const createListUserMemoTitlesTool = (
 
 export const createReadUserMemoTool = (
   owner: string = 'admin',
+  allowedAudiences: string[] = [],
   activePersonaName?: string,
   agentName?: string
 ) => {
@@ -54,8 +42,7 @@ export const createReadUserMemoTool = (
     execute: async ({ title }) => {
       console.log(`[Backend] Executing readUserMemo tool for title: ${title}, owner: ${owner}, activePersona: ${activePersonaName}, agent: ${agentName}`);
       
-      const allowedTargets = getAllowedTargets(activePersonaName, agentName);
-      const memo = getMemoByTitleForAudiences(title, owner, allowedTargets);
+      const memo = getMemoByTitleForAudiences(title, owner, allowedAudiences);
       
       if (memo) {
         return { content: memo.content };
@@ -67,6 +54,7 @@ export const createReadUserMemoTool = (
 
 export const createSaveUserMemoTool = (
   owner: string = 'admin',
+  allowedAudiences: string[] = [],
   activePersonaName?: string,
   agentName?: string
 ) => {
@@ -83,10 +71,7 @@ export const createSaveUserMemoTool = (
       // Get the existing memo by title without restrictions to see if we are updating
       const existing = getMemoByTitle(title, owner);
       
-      const targetAudiences = new Set<string>();
-      if (activePersonaName) targetAudiences.add(activePersonaName);
-      if (agentName) targetAudiences.add(agentName);
-      targetAudiences.add('assistant');
+      const targetAudiences = new Set<string>(allowedAudiences);
 
       if (existing) {
         // Keep existing audiences and add activePersona / agent if not present
