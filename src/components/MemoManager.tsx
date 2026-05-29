@@ -8,6 +8,9 @@ import {
   memoCurrentPage,
   memoPageSize,
   fetchMemos,
+  authRole,
+  memoFilterAudiences,
+  setMemoFilterAudiences,
 } from '../store/appState';
 import { CreateMemoForm } from './Memo/CreateMemoForm';
 import { MemoCard } from './Memo/MemoCard';
@@ -88,7 +91,30 @@ export function MemoManager() {
 
         {/* Existing Memos Section */}
         <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-          <h3 style="color: var(--text-primary); margin-bottom: 1.2rem; font-family: var(--font-family-display); font-size: 1.4rem;">Existing Memos</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+            <h3 style="color: var(--text-primary); margin: 0; font-family: var(--font-family-display); font-size: 1.4rem;">Existing Memos</h3>
+            
+            {authRole() === 'admin' && (
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label style="color: var(--text-muted); font-size: 0.85rem;">Audience Filter:</label>
+                <input
+                  type="text"
+                  class="glass-input"
+                  placeholder="e.g. user1, admin, *"
+                  value={memoFilterAudiences()}
+                  onInput={(e) => setMemoFilterAudiences(e.currentTarget.value)}
+                  style="width: 150px; padding: 0.4rem 0.6rem; font-size: 0.85rem;"
+                />
+                <button
+                  class="btn-glass"
+                  onClick={() => fetchMemos(1)}
+                  style="padding: 0.4rem 0.8rem; font-size: 0.85rem;"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem;">
             <Index each={userMemos()}>

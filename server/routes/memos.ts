@@ -11,11 +11,23 @@ memosApp.use('*', sessionContextMiddleware);
 
 memosApp.get('/', (c) => {
   try {
-    const { owner, allowedAudiences } = c.get('sessionContext') as SessionContext;
+    const { owner, allowedAudiences, capabilities } = c.get('sessionContext') as SessionContext;
     const page = parseInt(c.req.query('page') || '1', 10);
     const limit = parseInt(c.req.query('limit') || '10', 10);
     
-    const result = getMemosPaginated(owner, page, limit, allowedAudiences);
+    let audiencesToFetch = allowedAudiences;
+
+    // Clean rule: Use capability to determine if audience filtering can be overridden
+    if (capabilities.canSpecifyMemoAudience) {
+      const requestedAudiences = c.req.query('audiences');
+      if (requestedAudiences === '*') {
+        audiencesToFetch = []; // Empty array means "all" in our DB logic
+      } else if (requestedAudiences) {
+        audiencesToFetch = requestedAudiences.split(',').map(s => s.trim());
+      }
+    }
+
+    const result = getMemosPaginated(owner, page, limit, audiencesToFetch);
     return c.json(result);
   } catch (error: any) {
     console.error('[Backend] Error fetching memos:', error);

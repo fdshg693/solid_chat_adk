@@ -1,10 +1,16 @@
 import type { MiddlewareHandler } from 'hono';
 
+export type Capabilities = {
+  canSpecifyMemoAudience: boolean;
+};
+
 export type SessionContext = {
   owner: string;
+  role: string;
   activePersonaName?: string;
   agentName?: string;
   allowedAudiences: string[];
+  capabilities: Capabilities;
 };
 
 export const getAllowedAudiences = (activePersonaName?: string, agentName?: string): string[] => {
@@ -21,9 +27,10 @@ export const getAllowedAudiences = (activePersonaName?: string, agentName?: stri
 };
 
 export const sessionContextMiddleware: MiddlewareHandler = async (c, next) => {
-  // Extract owner from JWT payload (assumes jwt middleware ran first)
+  // Extract owner and role from JWT payload (assumes jwt middleware ran first)
   const payload = c.get('jwtPayload') as any;
   const owner = payload?.username;
+  const role = payload?.role || 'user'; // Default to user if not found
 
   // If no owner is found (e.g. not an authenticated route), just proceed
   if (!owner) {
@@ -39,11 +46,17 @@ export const sessionContextMiddleware: MiddlewareHandler = async (c, next) => {
 
   const allowedAudiences = getAllowedAudiences(activePersonaName, agentName);
 
+  const capabilities: Capabilities = {
+    canSpecifyMemoAudience: role === 'admin'
+  };
+
   const sessionContext: SessionContext = {
     owner,
+    role,
     activePersonaName,
     agentName,
-    allowedAudiences
+    allowedAudiences,
+    capabilities
   };
 
   c.set('sessionContext', sessionContext);

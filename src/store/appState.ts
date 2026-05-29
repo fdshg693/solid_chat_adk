@@ -21,8 +21,8 @@ import {
 } from './personaSlice';
 
 import {
-  userMemos, memoTotalCount, memoCurrentPage, memoPageSize,
-  setUserMemos, setMemoTotalCount, setMemoCurrentPage
+  userMemos, memoTotalCount, memoCurrentPage, memoPageSize, memoFilterAudiences,
+  setUserMemos, setMemoTotalCount, setMemoCurrentPage, setMemoFilterAudiences
 } from './memoSlice';
 
 import {
@@ -49,8 +49,8 @@ export {
   apiKey, tempKey, tavilyApiKey, tempTavilyKey, model, instruction,
   setApiKey, setTempKey, setTavilyApiKey, setTempTavilyKey, setModel, setInstruction,
   personas, activePersona, setPersonas, setActivePersona,
-  userMemos, memoTotalCount, memoCurrentPage, memoPageSize,
-  setUserMemos, setMemoTotalCount, setMemoCurrentPage,
+  userMemos, memoTotalCount, memoCurrentPage, memoPageSize, memoFilterAudiences,
+  setUserMemos, setMemoTotalCount, setMemoCurrentPage, setMemoFilterAudiences,
   agents, selectedAgentId, setAgents, setSelectedAgentId,
   sessions, sessionId, messages,
   setSessions, setSessionId, setMessages
@@ -64,7 +64,11 @@ export const fetchMemos = async (page: number = 1) => {
   const agent = agents().find(a => a.id === selectedAgentId());
   
   try {
-    const res = await authFetch(`/api/memos?page=${page}&limit=${memoPageSize}`, undefined, {
+    let url = `/api/memos?page=${page}&limit=${memoPageSize}`;
+    if (memoFilterAudiences()) {
+      url += `&audiences=${encodeURIComponent(memoFilterAudiences())}`;
+    }
+    const res = await authFetch(url, undefined, {
       personaName: persona,
       agentName: agent ? agent.name : undefined
     });
