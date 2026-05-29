@@ -48,16 +48,20 @@
 ### B. レコードレベルのデータ隔離
 SQLite の `memos` テーブルおよび `agents` テーブルには `owner` カラムが設定されています。
 *   **データ取得 (Read)**
-    クエリ時に `owner IS NULL`（システム初期データ・共通設定）または `owner = ?`（ログインユーザー名）の条件を強制適用し、他人のデータが絶対に混入しないようにします。
-    ```sql
-    SELECT * FROM memos WHERE owner IS NULL OR owner = ?
-    ```
+    - **カスタムエージェント (`agents`)**: クエリ時に `owner IS NULL`（システム初期データ・共通設定）または `owner = ?`（ログインユーザー名）の条件を適用し、他人のプライベートエージェントが混入しないように混在解決を行っています。
+      ```sql
+      SELECT * FROM agents WHERE owner IS NULL OR owner = ?
+      ```
+    - **ユーザーメモ (`memos`)**: ユーザーメモは個人所有データとして厳格に扱うため、オーナー不在のグローバルメモは除外し、ログイン中のオーナーに紐付く `owner = ?` のメモのみを取得します。
+      ```sql
+      SELECT * FROM memos WHERE owner = ?
+      ```
 *   **データ保存 (Write/Update)**
     保存時には、検証済み JWT から抽出した `username` の値を `owner` カラムに書き込みます。
 *   **データ削除 (Delete)**
-    削除クエリにも `owner` 条件を含め、自分が所有する（または共通の）データのみ削除可能としています。
+    削除クエリにも `owner` 条件を含め、自分が所有するデータのみ削除可能としています。
     ```sql
-    DELETE FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)
+    DELETE FROM memos WHERE id = ? AND owner = ?
     ```
 
 ---

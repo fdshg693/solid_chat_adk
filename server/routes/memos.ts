@@ -14,8 +14,9 @@ memosApp.get('/', (c) => {
     
     const page = parseInt(c.req.query('page') || '1', 10);
     const limit = parseInt(c.req.query('limit') || '10', 10);
+    const persona = c.req.query('persona');
     
-    const result = getMemosPaginated(owner, page, limit);
+    const result = getMemosPaginated(owner, page, limit, persona);
     return c.json(result);
   } catch (error: any) {
     console.error('[Backend] Error fetching memos:', error);

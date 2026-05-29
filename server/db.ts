@@ -122,7 +122,7 @@ const getAudiencesForMemo = (memoId: string): string[] => {
 };
 
 export const getAllMemos = (owner: string): UserMemo[] => {
-  const stmt = db.prepare('SELECT * FROM memos WHERE owner IS NULL OR owner = ?');
+  const stmt = db.prepare('SELECT * FROM memos WHERE owner = ?');
   const rows = stmt.all(owner) as unknown as UserMemoRow[];
   return rows.map(row => {
     const memo = mapRowToMemo(row);
@@ -134,18 +134,42 @@ export const getAllMemos = (owner: string): UserMemo[] => {
 export const getMemosPaginated = (
   owner: string,
   page: number,
-  limit: number
+  limit: number,
+  persona?: string
 ): { memos: UserMemo[]; total: number } => {
   const offset = (page - 1) * limit;
 
-  // Get total matching memos
-  const countStmt = db.prepare('SELECT COUNT(*) as count FROM memos WHERE owner IS NULL OR owner = ?');
-  const totalResult = countStmt.get(owner) as { count: number };
-  const total = totalResult ? totalResult.count : 0;
+  let total = 0;
+  let rows: UserMemoRow[] = [];
 
-  // Get paginated memos ordered from newest to oldest
-  const stmt = db.prepare('SELECT * FROM memos WHERE owner IS NULL OR owner = ? ORDER BY id DESC LIMIT ? OFFSET ?');
-  const rows = stmt.all(owner, limit, offset) as unknown as UserMemoRow[];
+  if (persona) {
+    // Get total matching memos filtered by persona audience
+    const countStmt = db.prepare(`
+      SELECT COUNT(*) as count FROM memos 
+      WHERE owner = ? 
+        AND id IN (SELECT memo_id FROM memo_audiences WHERE username = ?)
+    `);
+    const totalResult = countStmt.get(owner, persona) as { count: number };
+    total = totalResult ? totalResult.count : 0;
+
+    // Get paginated memos filtered by persona audience ordered from newest to oldest
+    const stmt = db.prepare(`
+      SELECT * FROM memos 
+      WHERE owner = ? 
+        AND id IN (SELECT memo_id FROM memo_audiences WHERE username = ?) 
+      ORDER BY id DESC LIMIT ? OFFSET ?
+    `);
+    rows = stmt.all(owner, persona, limit, offset) as unknown as UserMemoRow[];
+  } else {
+    // Get total matching memos
+    const countStmt = db.prepare('SELECT COUNT(*) as count FROM memos WHERE owner = ?');
+    const totalResult = countStmt.get(owner) as { count: number };
+    total = totalResult ? totalResult.count : 0;
+
+    // Get paginated memos ordered from newest to oldest
+    const stmt = db.prepare('SELECT * FROM memos WHERE owner = ? ORDER BY id DESC LIMIT ? OFFSET ?');
+    rows = stmt.all(owner, limit, offset) as unknown as UserMemoRow[];
+  }
 
   const memos = rows.map(row => {
     const memo = mapRowToMemo(row);
@@ -157,7 +181,7 @@ export const getMemosPaginated = (
 };
 
 export const getMemoById = (id: string, owner: string): UserMemo | undefined => {
-  const stmt = db.prepare('SELECT * FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  const stmt = db.prepare('SELECT * FROM memos WHERE id = ? AND owner = ?');
   const row = stmt.get(id, owner) as unknown as UserMemoRow | undefined;
   if (!row) return undefined;
   const memo = mapRowToMemo(row);
@@ -166,7 +190,7 @@ export const getMemoById = (id: string, owner: string): UserMemo | undefined => 
 };
 
 export const getMemoByTitle = (title: string, owner: string): UserMemo | undefined => {
-  const stmt = db.prepare('SELECT * FROM memos WHERE title = ? AND (owner IS NULL OR owner = ?)');
+  const stmt = db.prepare('SELECT * FROM memos WHERE title = ? AND owner = ?');
   const row = stmt.get(title, owner) as unknown as UserMemoRow | undefined;
   if (!row) return undefined;
   const memo = mapRowToMemo(row);
@@ -198,7 +222,7 @@ export const saveMemo = (memo: UserMemo, owner: string): void => {
 };
 
 export const deleteMemo = (id: string, owner: string): void => {
-  const stmt = db.prepare('DELETE FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  const stmt = db.prepare('DELETE FROM memos WHERE id = ? AND owner = ?');
   stmt.run(id, owner);
 };
 

@@ -109,6 +109,7 @@ export const switchPersona = (id: string) => {
   if (found) {
     setActivePersona(found);
     localStorage.setItem(getAuthKey('active_persona_id'), id);
+    fetchMemos(1);
   }
 };
 
@@ -191,8 +192,9 @@ export const [currentTab, setCurrentTab] = createSignal<'chat' | 'agents' | 'set
 export const fetchMemos = async (page: number = 1) => {
   const user = authUsername();
   if (!user) return;
+  const persona = activePersona() ? activePersona().name : '';
   try {
-    const res = await authFetch(`/api/memos?page=${page}&limit=${memoPageSize}`);
+    const res = await authFetch(`/api/memos?page=${page}&limit=${memoPageSize}&persona=${encodeURIComponent(persona)}`);
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.memos)) {

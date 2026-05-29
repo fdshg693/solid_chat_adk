@@ -71,28 +71,31 @@
 
 認証ユーザーごとの安全なデータアクセスを保証するため、データベースの読み書き処理において以下のクエリによるフィルタリングとオーナー紐付けが徹底されています。
 
-* **グローバルリソースと個人リソースの混在解決**:
-  `owner IS NULL` であるリソース（初期リソースや共通設定など）と、`owner = ?` であるリソース（ログインユーザー本人が作成したリソース）の両方を読み込めるようにするため、データ取得時は以下の条件指定を行います。
-  ```sql
-  SELECT * FROM memos WHERE owner IS NULL OR owner = ?
-  ```
-  また、メモ一覧表示（UI用）の取得時は、表示パフォーマンス向上のため、サーバーサイドページングおよびIDの降順（新規作成順）での並び替えを行います。
-  ```sql
-  -- 件数取得用
-  SELECT COUNT(*) as count FROM memos WHERE owner IS NULL OR owner = ?
-  
-  -- ページング取得用（例：1ページ10件）
-  SELECT * FROM memos WHERE owner IS NULL OR owner = ? ORDER BY id DESC LIMIT ? OFFSET ?
-  ```
+* **グローバルリソースと個人リソースの混在解決 (エージェント等)**:
+  `owner IS NULL` であるリソース（初期リソースや共通設定など）と、`owner = ?` であるリソース（ログインユーザー本人が作成したリソース）の両方を読み込めるようにするため、エージェント等の取得時は以下の条件指定を行います。
   ```sql
   SELECT * FROM agents WHERE owner IS NULL OR owner = ?
+  ```
+  一方で、**ユーザーメモ（Memos）**についてはセキュリティおよびデータ分離の観点からオーナー不在のグローバルメモは非表示とし、厳格に現在ログインしているオーナーに紐付くメモのみを取得します。
+  選択中の「表示用ペルソナ」が公開対象（ターゲットオーディエンス）に含まれるメモのみを取得するため、以下のようにサブクエリフィルタリング、サーバーサイドページング、およびIDの降順（新規作成順）での並び替えを行います。
+  ```sql
+  -- 件数取得用（ペルソナ指定時）
+  SELECT COUNT(*) as count FROM memos 
+  WHERE owner = ? 
+    AND id IN (SELECT memo_id FROM memo_audiences WHERE username = ?)
+  
+  -- ページング取得用（ペルソナ指定時）
+  SELECT * FROM memos 
+  WHERE owner = ? 
+    AND id IN (SELECT memo_id FROM memo_audiences WHERE username = ?) 
+  ORDER BY id DESC LIMIT ? OFFSET ?
   ```
 * **新規保存時のオーナー紐付け**:
   データ保存（`saveMemo` / `saveAgent`）の実行時、検証済み JWT から抽出したログインユーザー名を `owner` カラムに書き込みます。
 * **削除のアクセス制御**:
-  自分が所有しているデータ（または共通データ）のみ削除できるようにするため、削除クエリにも `owner` 条件を付与します。
+  自分が所有しているデータのみ削除できるようにするため、削除クエリにも `owner` 条件を付与します。
   ```sql
-  DELETE FROM memos WHERE id = ? AND (owner IS NULL OR owner = ?)
+  DELETE FROM memos WHERE id = ? AND owner = ?
   ```
 
 ---
