@@ -270,12 +270,12 @@ export interface Agent {
 }
 
 export const getAllAgents = (owner: string): Agent[] => {
-  const stmt = db.prepare('SELECT * FROM agents WHERE owner IS NULL OR owner = ?');
+  const stmt = db.prepare('SELECT * FROM agents WHERE owner = ?');
   return stmt.all(owner) as unknown as Agent[];
 };
 
 export const getAgentById = (id: string, owner: string): Agent | undefined => {
-  const stmt = db.prepare('SELECT * FROM agents WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  const stmt = db.prepare('SELECT * FROM agents WHERE id = ? AND owner = ?');
   return stmt.get(id, owner) as unknown as Agent | undefined;
 };
 
@@ -291,6 +291,6 @@ export const saveAgent = (agent: Agent, owner: string): void => {
 };
 
 export const deleteAgent = (id: string, owner: string): void => {
-  const stmt = db.prepare('DELETE FROM agents WHERE id = ? AND (owner IS NULL OR owner = ?)');
+  const stmt = db.prepare('DELETE FROM agents WHERE id = ? AND owner = ?');
   stmt.run(id, owner);
 };

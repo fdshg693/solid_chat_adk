@@ -1,5 +1,5 @@
 import { For, createSignal } from 'solid-js';
-import { agents, setAgents, type Agent, authFetch } from '../store/appState';
+import { agents, setAgents, type Agent, authFetch, authUsername } from '../store/appState';
 import './AgentManager.css';
 
 export function AgentManager() {
@@ -60,7 +60,7 @@ export function AgentManager() {
 
   const createAgent = async () => {
     if (!newName().trim() || !newPrompt().trim()) return;
-    const id = `agent-${Date.now()}`;
+    const id = `${authUsername() || 'user'}-agent-${Date.now()}`;
     try {
       const response = await authFetch('/api/agents', {
         method: 'POST',
